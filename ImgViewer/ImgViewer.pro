@@ -13,8 +13,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    filemanager.cpp \
+    cameraviewbutton.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    filemanager.h \
+    cameraviewbutton.h
 
 FORMS    += mainwindow.ui

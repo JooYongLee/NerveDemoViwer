@@ -5,7 +5,10 @@
 #include <QDir>
 #include <QMainWindow>
 #include <QHBoxLayout>
+#include <QPushButton>
 
+#include "filemanager.h"
+#include "cameraviewbutton.h"
 /***********************/
 #ifndef         IMG_SLOT
 #define         IMG_SLOT           6
@@ -25,31 +28,8 @@ public:
     {}
     ~BoundingBox()
     {}
-
-
-
-
 };
-/**
- * @brief The FileManger class
- */
-class FileManger : public QDir
-{
-public:
-    FileManger(QString path ="");
-    ~FileManger();
-    int     num_files;
-    QString     img_path;
-    QStringList file_list;
- public:
-    QStringList GetImgList();
-    QString GetImgPath(int n);
-    QString GetImgPath(int n,int m);
-    QString GetBasePath() const {   return img_path;    }
-    void UpdateFileList();
-    void WriteBoxImg();
-    void WriteImg();
-};
+
 
 /**
  * @brief The ImgView class
@@ -69,6 +49,7 @@ public:
 
     void    paintEvent(QPaintEvent *);
     QPixmap pixmap[IMG_SLOT];
+    FileManger mng;
 public slots:
     void    MoveSlice(int);
 
@@ -79,10 +60,18 @@ public slots:
     void    MoveSlice5(int);
     void    MoveSlice6(int);
 
+    void    FileOpen();
+    void    FileSave();
+
+// cameara view button
+    void    ViewCoronal();
+    void    ViewAxial();
+    void    ViewSagittal();
+
 
 
 private:
-    FileManger mng;
+
     int     _i_slice_num;
     int     _num_viwer;
     QSize   _img_default_size;
@@ -92,9 +81,24 @@ private:
     void    _CreateSliders();
     void     _CreateSlider( int num_slot );
     void     _AddSliderInBox(QHBoxLayout *layout);
-    void     _LoadImgSlots();
+    void     _LoadImgSlots(QString img_path);
     QPoint  _GetImgPos( int num_slot);
     void    _SetImgSize(QPixmap *pixmap);
+
+
+
+    QMenu   *CameraViewMenu;
+    QToolBar *editToolBar;
+    CameraViewButton* cameraviewToolButton;
+
+    QAction *ActionCoronal;
+    QAction *ActionSagittal;
+    QAction *ActionAxial;
+
+    void    createCameraViewMenu();
+    void    createActions();
+    void    createToolButtons();
+    void    createToolBars();
 };
 
 #endif // MAINWINDOW_H
