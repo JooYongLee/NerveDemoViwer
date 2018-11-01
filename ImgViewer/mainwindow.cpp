@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 
+#include "imgreader.h"
 
 ImgView::ImgView(QWidget *parent) :
     QWidget(parent),
@@ -149,20 +150,7 @@ ImgView::~ImgView()
 
 
 }
-void ImgView::MoveSlice(int num_slice)
-{
-    QString strdebug;
-    for(int i = 0 ; i < IMG_SLOT;i++)
-    {
-        QString str = "0";
-        str.sprintf("[%d]:%d  ",i,GetSlice(i));
-        strdebug += str;
-    }
 
-
-
-    qDebug()<<strdebug;
-}
 void     ImgView::_LoadImgSlots(QString img_path)
 {    
     for(int i = 0; i <IMG_SLOT; i++)
@@ -171,8 +159,8 @@ void     ImgView::_LoadImgSlots(QString img_path)
         QString load_img_path = mng.GetImgPath(
                     slider[i]->value(),
                     100
-                    );
-        pixmap[i].load(load_img_path);
+                    );        
+        read_img_from_path(pixmap[i],load_img_path);
         pixmap[i] = pixmap[i].scaled(_img_default_size);
     }
 
@@ -195,9 +183,8 @@ void ImgView::paintEvent(QPaintEvent *event)
 void ImgView::MoveSlice1(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( pixmap[0].load(path))
+    if(read_img_from_path(pixmap[0],path))
     {
-
         pixmap[0] = pixmap[0].scaled(_img_default_size);
     }
     repaint();
@@ -207,7 +194,7 @@ void ImgView::MoveSlice2(int num_slice)
     QString path = mng.GetImgPath(num_slice, 100);
     qDebug()<<mng.absolutePath();
     qDebug()<<path;
-    if( pixmap[1].load(path))
+    if( read_img_from_path(pixmap[1],path))
     {
 
         pixmap[1] = pixmap[1].scaled(_img_default_size);
@@ -217,7 +204,7 @@ void ImgView::MoveSlice2(int num_slice)
 void ImgView::MoveSlice3(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( pixmap[2].load(path))
+    if( read_img_from_path(pixmap[2],path))
     {
 
         pixmap[2] = pixmap[2].scaled(_img_default_size);
@@ -227,7 +214,7 @@ void ImgView::MoveSlice3(int num_slice)
 void ImgView::MoveSlice4(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( pixmap[3].load(path))
+    if( read_img_from_path(pixmap[3],path))
     {
         pixmap[3] = pixmap[3].scaled(_img_default_size);
     }
@@ -236,7 +223,7 @@ void ImgView::MoveSlice4(int num_slice)
 void ImgView::MoveSlice5(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( pixmap[4].load(path))
+    if( read_img_from_path(pixmap[4],path))
     {
         pixmap[4] = pixmap[4].scaled(_img_default_size);
     }
@@ -245,7 +232,7 @@ void ImgView::MoveSlice5(int num_slice)
 void ImgView::MoveSlice6(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( pixmap[5].load(path))
+    if( read_img_from_path(pixmap[5],path))
     {
 
         pixmap[5] = pixmap[5].scaled(_img_default_size);
@@ -256,7 +243,11 @@ void ImgView::MoveSlice6(int num_slice)
 void    ImgView::FileOpen()
 {
     QString filepath;
-    filepath = QFileDialog::getOpenFileName(this,tr("Open Image"),tr("c:/"),tr("Image Files (*.png *.jpg *.bmp)"));
+    filepath = QFileDialog::getOpenFileName(
+                this,
+                tr("Open Image"),
+                tr("c:/"),
+                tr("Image Files (*.png *.jpg *.bmp *.dcm)"));
     QFileInfo fileinfo(filepath);
 
     qDebug()<<"filepath_path"<<fileinfo.path();

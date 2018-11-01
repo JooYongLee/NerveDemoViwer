@@ -51,7 +51,7 @@ public:
     QPixmap pixmap[IMG_SLOT];
     FileManger mng;
 public slots:
-    void    MoveSlice(int);
+
 
     void    MoveSlice1(int);
     void    MoveSlice2(int);

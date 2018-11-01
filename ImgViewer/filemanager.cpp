@@ -10,7 +10,11 @@ FileManger::~FileManger()
 }
 void FileManger::ResearchImgList()
 {
-    this->setNameFilters(QStringList()<<"*.jpg"<<"*.png"<<"*.bmp");
+    this->setNameFilters(QStringList()<<\
+                         "*.jpg"<<\
+                         "*.png"<<\
+                         "*.bmp"<<
+                         "*.dcm");
 
     file_list = this->entryList();
     UpdateFileList();
