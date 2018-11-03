@@ -1,6 +1,8 @@
 #include "dcmcore.h"
 #include <stdio.h>
 #include <iostream>
+#include <QDebug>
+#define SAVE_DELETE_ARRAY(x)        if(x) {delete []x; x = NULL;}
 using namespace std;
 void TestDcmPrint()
 {
@@ -67,7 +69,7 @@ bool LoadDicom(std::string imgpath, unsigned char *&buff8, int &width, int &heig
 
                 image->getMinMaxValues(dmin,dmax);
 
-                cout<<"min"<<dmin<<"max"<<dmax<<"size"<<image->getOutputDataSize();
+                //cout<<"min"<<dmin<<"max"<<dmax<<"size"<<image->getOutputDataSize();
 
 
                 height =  image->getHeight();
@@ -79,11 +81,7 @@ bool LoadDicom(std::string imgpath, unsigned char *&buff8, int &width, int &heig
                 if (pixelData != NULL && buff8 == NULL)
                 {
                     buff8 = new unsigned char[ height * width];
-                    memset(buff8, 0, width * height * sizeof(unsigned char));
-
-                    cout << "loading complete "<<endl;
-                    cout << "img width" << width << endl;
-                    cout << "img height" << height << endl;
+                    memset(buff8, 0, width * height * sizeof(unsigned char));                    
                     scale_array(pixelData, buff8, height * width, 255.0f/16383.0f );
                     /* do something useful with the pixel data */
                 }
@@ -114,5 +112,79 @@ bool get_data_from_dcm(std::string imgpath, unsigned char *&buff8, int &width, i
     }
 
     return LoadDicom(imgpath,buff8, width,height);
+}
+bool get_volumen_from_dcm(QStringList imgpathes,
+                          QString      abspath,
+                          unsigned char *&buff8,
+                          int &width,
+                          int &height,
+                          int &depth)
+{
+    QStringList path;
+    for( QStringList::iterator filename = imgpathes.begin();
+         filename < imgpathes.end();
+         filename++)
+    {
+        path.push_back( abspath + "/" +  *filename );
+    }
+    return get_volumen_from_dcm(
+                path,
+                buff8,
+                width,
+                height,
+                depth);
+}
+
+bool get_volumen_from_dcm(QStringList imgpathes, unsigned char *&buff8, int &width, int &height, int &depth)
+{
+    DcmFileFormat file_format;
+    int depth_vars = imgpathes.size();
+    depth = 0;
+    SAFE_DELETE_ARRAY(buff8);
+
+
+    int move_pitch = 0;
+    int pitch = 0;
+    for(  QStringList::iterator path = imgpathes.begin(); path < imgpathes.end(); path++)
+    {
+        OFCondition status = file_format.loadFile( (*path).toStdString().c_str() );
+        // invalid dicom files!!
+        if( status.bad()  ) continue;
+
+       unsigned char *temp_buff = NULL;
+       int temp_width = 0;
+       int temp_height = 0;
+       if( LoadDicom((*path).toStdString(),temp_buff, temp_width, temp_height) == true)
+       {
+           //creating only once
+           if( buff8  == NULL )
+           {
+               width = temp_width;
+               height = temp_height;
+               pitch = width*height;
+               buff8 = new unsigned char[width*height*depth_vars];
+           }
+
+           if( width == temp_width &&
+                   height == temp_height )
+           {
+               memcpy(buff8 + move_pitch, temp_buff, sizeof(unsigned char)*pitch);
+               depth++;
+               move_pitch += pitch;               
+           }		   
+		   SAFE_DELETE_ARRAY(temp_buff);
+       }
+    }
+    if( depth != depth_vars)
+    {
+        qDebug()<<"difference image list";
+        SAFE_DELETE_ARRAY(buff8);
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
 }
 

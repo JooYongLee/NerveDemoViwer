@@ -13,7 +13,8 @@
 
 ImgView::ImgView(QWidget *parent) :
     QWidget(parent),
-    _img_default_size(QSize(150,230))
+    _img_default_size(QSize(150,230)),
+    _sequenceImage(NULL)
 {
     this->resize(1000, 600);
     QHBoxLayout *layout = new QHBoxLayout;
@@ -183,40 +184,116 @@ void ImgView::paintEvent(QPaintEvent *event)
 void ImgView::MoveSlice1(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if(read_img_from_path(pixmap[0],path))
+
+    if( this->_sequenceImage == NULL )
     {
-        pixmap[0] = pixmap[0].scaled(_img_default_size);
+        if(read_img_from_path(pixmap[0],path))
+        {
+            pixmap[0] = pixmap[0].scaled(_img_default_size);
+        }
+    }
+    else
+    {
+        int Height = this->_sequenceImageSize.height;
+        int pos_flag = (int)( Height * num_slice / 100 );
+        if( read_img_from_seqeunceimg(this->_sequenceImage,
+                                  this->_sequenceImageSize.width,
+                                  this->_sequenceImageSize.height,
+                                  this->_sequenceImageSize.depth,
+                                  CORONAL,
+                                  pos_flag,
+                                  pixmap[0]
+                                  ))
+        {
+            pixmap[0] = pixmap[0].scaled(_img_default_size);
+        }
     }
     repaint();
 }
 void ImgView::MoveSlice2(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    qDebug()<<mng.absolutePath();
-    qDebug()<<path;
-    if( read_img_from_path(pixmap[1],path))
+    if( this->_sequenceImage == NULL )
     {
-
-        pixmap[1] = pixmap[1].scaled(_img_default_size);
+        if( read_img_from_path(pixmap[1],path))
+        {
+            pixmap[1] = pixmap[1].scaled(_img_default_size);
+        }
+    }
+    else
+    {
+        int depth = this->_sequenceImageSize.depth;
+        int pos_flag = (int)( depth * num_slice / 100 );
+        if( read_img_from_seqeunceimg(this->_sequenceImage,
+                                  this->_sequenceImageSize.width,
+                                  this->_sequenceImageSize.height,
+                                  this->_sequenceImageSize.depth,
+                                  AXIAL,
+                                  pos_flag,
+                                  pixmap[1]
+                                  ))
+        {
+            pixmap[1] = pixmap[1].scaled(_img_default_size);
+        }
     }
     repaint();
 }
 void ImgView::MoveSlice3(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( read_img_from_path(pixmap[2],path))
+    if( this->_sequenceImage == NULL )
     {
+        if( read_img_from_path(pixmap[2],path))
+        {
 
-        pixmap[2] = pixmap[2].scaled(_img_default_size);
+            pixmap[2] = pixmap[2].scaled(_img_default_size);
+        }
     }
+    else
+    {
+        int width = this->_sequenceImageSize.width;
+        int pos_flag = (int)( width * num_slice / 100 );
+        if( read_img_from_seqeunceimg(this->_sequenceImage,
+                                  this->_sequenceImageSize.width,
+                                  this->_sequenceImageSize.height,
+                                  this->_sequenceImageSize.depth,
+                                  SAGITTAL,
+                                  pos_flag,
+                                  pixmap[2]
+                                  ))
+        {
+            pixmap[2] = pixmap[2].scaled(_img_default_size);
+        }
+
+    }
+
     repaint();
 }
 void ImgView::MoveSlice4(int num_slice)
 {
     QString path = mng.GetImgPath(num_slice, 100);
-    if( read_img_from_path(pixmap[3],path))
+    if( this->_sequenceImage == NULL )
     {
-        pixmap[3] = pixmap[3].scaled(_img_default_size);
+        if( read_img_from_path(pixmap[3],path))
+        {
+            pixmap[3] = pixmap[3].scaled(_img_default_size);
+        }
+    }
+    else
+    {
+        int Height = this->_sequenceImageSize.height;
+        int pos_flag = (int)( Height * num_slice / 100 );
+        if( read_img_from_seqeunceimg(this->_sequenceImage,
+                                  this->_sequenceImageSize.width,
+                                  this->_sequenceImageSize.height,
+                                  this->_sequenceImageSize.depth,
+                                  CORONAL,
+                                  pos_flag,
+                                  pixmap[3]
+                                  ))
+        {
+            pixmap[3] = pixmap[3].scaled(_img_default_size);
+        }
     }
     repaint();
 }
@@ -250,6 +327,7 @@ void    ImgView::FileOpen()
                 tr("Image Files (*.png *.jpg *.bmp *.dcm)"));
     QFileInfo fileinfo(filepath);
 
+
     qDebug()<<"filepath_path"<<fileinfo.path();
     qDebug()<<"filepath_fileName"<<fileinfo.fileName().split(".");
     qDebug()<<"filepath_filePath"<<fileinfo.filePath();
@@ -259,6 +337,41 @@ void    ImgView::FileOpen()
 
     if( filepath.length() > 0 )
     {
+        QString dicompath = fileinfo.path();
+        FileManger dicommnage(dicompath);
+
+        SAFE_DELETE_ARRAY(_sequenceImage);
+
+        dicommnage.setNameFilters(QStringList()<<
+                             "*.dcm");
+        //dicommnage.setNameFilters(QStringList()<<"*.dcm");
+        QStringList dicom_file_list = dicommnage.entryList();
+        //unsigned char *test_buff = NULL;
+        int width = 0;
+        int height = 0;
+        int depth = 0;
+       if( get_volumen_from_dcm(  dicom_file_list,
+                                  dicommnage.absolutePath(),
+                                  _sequenceImage,
+                                  width,
+                                  height,
+                                  depth))
+       {
+           _sequenceImageSize = NumSize(width, height,depth);
+           qDebug()<<"volume loading complete"<<width<<"x"<<height<<"x"<<depth;
+       }
+       else
+       {
+           qDebug()<<"volume loading failed!!\n";
+       }
+
+
+        qDebug()<<"dicomimage list\n"<<dicompath;
+        qDebug()<<"dicomimage list\n"<<dicom_file_list;
+        qDebug()<<"dicommnage.absolutePath()\n"<<dicommnage.absolutePath();
+
+
+
 
         mng.setPath(fileinfo.path());
         mng.ResearchImgList();

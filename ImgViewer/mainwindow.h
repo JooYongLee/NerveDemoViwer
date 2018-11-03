@@ -9,6 +9,7 @@
 
 #include "filemanager.h"
 #include "cameraviewbutton.h"
+#include "dcmcore.h"
 /***********************/
 #ifndef         IMG_SLOT
 #define         IMG_SLOT           6
@@ -30,6 +31,26 @@ public:
     {}
 };
 
+class NumSize
+{
+public:
+    NumSize()
+        : width(0),
+          height(0),
+          depth(0)
+    {};
+    ~NumSize(){}
+    NumSize(int _width,
+            int _height,
+            int _depth)
+        : width(_width),
+          height(_height),
+          depth(_depth)
+         {}
+    int width;
+    int height;
+    int depth;
+};
 
 /**
  * @brief The ImgView class
@@ -71,6 +92,10 @@ public slots:
 
 
 private:
+
+    unsigned\
+    char    *_sequenceImage;
+    NumSize _sequenceImageSize;
 
     int     _i_slice_num;
     int     _num_viwer;
