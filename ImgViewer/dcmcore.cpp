@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <QDebug>
+#include <QThread>
+#include <QProgressDialog>
 #define SAVE_DELETE_ARRAY(x)        if(x) {delete []x; x = NULL;}
 using namespace std;
 void TestDcmPrint()
@@ -142,12 +144,24 @@ bool get_volumen_from_dcm(QStringList imgpathes, unsigned char *&buff8, int &wid
     depth = 0;
     SAFE_DELETE_ARRAY(buff8);
 
+    QProgressDialog progress("Loading files...", "Cancels", 0, depth_vars);
+    progress.setWindowTitle("yosi grando");
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(1);
+
 
     int move_pitch = 0;
     int pitch = 0;
     for(  QStringList::iterator path = imgpathes.begin(); path < imgpathes.end(); path++)
     {
+
+         progress.setValue(depth);
         OFCondition status = file_format.loadFile( (*path).toStdString().c_str() );
+
+        if (progress.wasCanceled())
+        {
+            break;
+        }
         // invalid dicom files!!
         if( status.bad()  ) continue;
 
@@ -175,9 +189,12 @@ bool get_volumen_from_dcm(QStringList imgpathes, unsigned char *&buff8, int &wid
 		   SAFE_DELETE_ARRAY(temp_buff);
        }
     }
+
+
+    progress.setValue(depth_vars);
+
     if( depth != depth_vars)
-    {
-        qDebug()<<"difference image list";
+    {        
         SAFE_DELETE_ARRAY(buff8);
         return false;
     }

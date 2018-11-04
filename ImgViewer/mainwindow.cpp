@@ -9,6 +9,9 @@
 #include <QFileDialog>
 #include <QFileInfo>
 
+#include <QProgressDialog>
+#include <QThread>
+
 #include "imgreader.h"
 
 ImgView::ImgView(QWidget *parent) :
@@ -137,7 +140,7 @@ void  ImgView::_CreateSlider( int num_slot )
     slider[num_slot]    =   new QSlider(Qt::Vertical, this);
     slider[num_slot]->setGeometry(_GetSliderPos(num_slot));
     slider[num_slot]->setRange(0,99);
-    slider[num_slot]->setValue(50);
+    slider[num_slot]->setValue(50);        
 }
 
 int ImgView::GetSlice(int num_slot)
@@ -154,17 +157,22 @@ ImgView::~ImgView()
 
 void     ImgView::_LoadImgSlots(QString img_path)
 {    
-    for(int i = 0; i <IMG_SLOT; i++)
-    {
-        qDebug()<<"image loading"<<i;
-        QString load_img_path = mng.GetImgPath(
-                    slider[i]->value(),
-                    100
-                    );        
-        read_img_from_path(pixmap[i],load_img_path);
-        pixmap[i] = pixmap[i].scaled(_img_default_size);
-    }
-
+//    for(int i = 0; i <IMG_SLOT; i++)
+//    {
+//        qDebug()<<"image loading"<<i;
+//        QString load_img_path = mng.GetImgPath(
+//                    slider[i]->value(),
+//                    100
+//                    );
+//        read_img_from_path(pixmap[i],load_img_path);
+//        pixmap[i] = pixmap[i].scaled(_img_default_size);
+//    }
+    MoveSlice1(slider[0]->value());
+    MoveSlice2(slider[1]->value());
+    MoveSlice3(slider[2]->value());
+    MoveSlice4(slider[3]->value());
+    MoveSlice5(slider[4]->value());
+    MoveSlice6(slider[5]->value());
 }
 
 void ImgView::paintEvent(QPaintEvent *event)
@@ -183,13 +191,14 @@ void ImgView::paintEvent(QPaintEvent *event)
 
 void ImgView::MoveSlice1(int num_slice)
 {
+    int ind = 0;
     QString path = mng.GetImgPath(num_slice, 100);
 
     if( this->_sequenceImage == NULL )
     {
-        if(read_img_from_path(pixmap[0],path))
+        if(read_img_from_path(pixmap[ind],path))
         {
-            pixmap[0] = pixmap[0].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     else
@@ -202,22 +211,23 @@ void ImgView::MoveSlice1(int num_slice)
                                   this->_sequenceImageSize.depth,
                                   CORONAL,
                                   pos_flag,
-                                  pixmap[0]
+                                  pixmap[ind]
                                   ))
         {
-            pixmap[0] = pixmap[0].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     repaint();
 }
 void ImgView::MoveSlice2(int num_slice)
 {
+    const int ind = 1;
     QString path = mng.GetImgPath(num_slice, 100);
     if( this->_sequenceImage == NULL )
     {
-        if( read_img_from_path(pixmap[1],path))
+        if( read_img_from_path(pixmap[ind],path))
         {
-            pixmap[1] = pixmap[1].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     else
@@ -230,23 +240,24 @@ void ImgView::MoveSlice2(int num_slice)
                                   this->_sequenceImageSize.depth,
                                   AXIAL,
                                   pos_flag,
-                                  pixmap[1]
+                                  pixmap[ind]
                                   ))
         {
-            pixmap[1] = pixmap[1].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     repaint();
 }
 void ImgView::MoveSlice3(int num_slice)
 {
+    const int ind = 2;
     QString path = mng.GetImgPath(num_slice, 100);
     if( this->_sequenceImage == NULL )
     {
-        if( read_img_from_path(pixmap[2],path))
+        if( read_img_from_path(pixmap[ind],path))
         {
 
-            pixmap[2] = pixmap[2].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     else
@@ -259,24 +270,23 @@ void ImgView::MoveSlice3(int num_slice)
                                   this->_sequenceImageSize.depth,
                                   SAGITTAL,
                                   pos_flag,
-                                  pixmap[2]
+                                  pixmap[ind]
                                   ))
         {
-            pixmap[2] = pixmap[2].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
-
     }
-
     repaint();
 }
 void ImgView::MoveSlice4(int num_slice)
 {
+    const int ind = 3;
     QString path = mng.GetImgPath(num_slice, 100);
     if( this->_sequenceImage == NULL )
     {
-        if( read_img_from_path(pixmap[3],path))
+        if( read_img_from_path(pixmap[ind],path))
         {
-            pixmap[3] = pixmap[3].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     else
@@ -289,30 +299,70 @@ void ImgView::MoveSlice4(int num_slice)
                                   this->_sequenceImageSize.depth,
                                   CORONAL,
                                   pos_flag,
-                                  pixmap[3]
+                                  pixmap[ind]
                                   ))
         {
-            pixmap[3] = pixmap[3].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
         }
     }
     repaint();
 }
 void ImgView::MoveSlice5(int num_slice)
 {
+    const int ind = 4;
     QString path = mng.GetImgPath(num_slice, 100);
-    if( read_img_from_path(pixmap[4],path))
+    if( this->_sequenceImage == NULL )
     {
-        pixmap[4] = pixmap[4].scaled(_img_default_size);
+        if( read_img_from_path(pixmap[ind],path))
+        {
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
+        }
+    }
+    else
+    {
+        int depth = this->_sequenceImageSize.depth;
+        int pos_flag = (int)( depth * num_slice / 100 );
+        if( read_img_from_seqeunceimg(this->_sequenceImage,
+                                  this->_sequenceImageSize.width,
+                                  this->_sequenceImageSize.height,
+                                  this->_sequenceImageSize.depth,
+                                  AXIAL,
+                                  pos_flag,
+                                  pixmap[ind]
+                                  ))
+        {
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
+        }
     }
     repaint();
 }
 void ImgView::MoveSlice6(int num_slice)
 {
+    const int ind = 5;
     QString path = mng.GetImgPath(num_slice, 100);
-    if( read_img_from_path(pixmap[5],path))
+    if( this->_sequenceImage == NULL )
     {
+        if( read_img_from_path(pixmap[ind],path))
+        {
 
-        pixmap[5] = pixmap[5].scaled(_img_default_size);
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
+        }
+    }
+    else
+    {
+        int width = this->_sequenceImageSize.width;
+        int pos_flag = (int)( width * num_slice / 100 );
+        if( read_img_from_seqeunceimg(this->_sequenceImage,
+                                  this->_sequenceImageSize.width,
+                                  this->_sequenceImageSize.height,
+                                  this->_sequenceImageSize.depth,
+                                  SAGITTAL,
+                                  pos_flag,
+                                  pixmap[ind]
+                                  ))
+        {
+            pixmap[ind] = pixmap[ind].scaled(_img_default_size);
+        }
     }
     repaint();
 }
@@ -358,7 +408,6 @@ void    ImgView::FileOpen()
                                   depth))
        {
            _sequenceImageSize = NumSize(width, height,depth);
-           qDebug()<<"volume loading complete"<<width<<"x"<<height<<"x"<<depth;
        }
        else
        {
