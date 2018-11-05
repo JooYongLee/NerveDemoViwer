@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>line.png</file>
+        <file>select.png</file>
+    </qresource>
+</RCC>
