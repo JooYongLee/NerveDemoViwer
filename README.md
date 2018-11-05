@@ -8,3 +8,6 @@ https://cppcodetips.wordpress.com/
 
 Introduction to Object-Orientation and the UML
 http://www.agiledata.org/essays/objectOrientation101.html
+
+Useful QT Examples Blog
+https://www.walletfox.com/
