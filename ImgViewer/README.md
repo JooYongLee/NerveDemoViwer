@@ -1,2 +1,2 @@
 d
-![My image](JooYongLee.github.com/NerveDemoViwer/edit/master/ImgViewer/ImgViewer
+!https://github.com/JooYongLee/NerveDemoViwer/blob/master/ImgViewer/ImgVeiwer2.PNG
