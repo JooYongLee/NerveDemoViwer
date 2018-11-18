@@ -11,3 +11,6 @@ http://www.agiledata.org/essays/objectOrientation101.html
 
 Useful QT Examples Blog
 https://www.walletfox.com/
+
+Prerequsites
+* DCMTK
