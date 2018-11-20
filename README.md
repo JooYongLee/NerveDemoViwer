@@ -14,3 +14,8 @@ https://www.walletfox.com/
 
 Prerequisites
 * DCMTK
+
+![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/ImgViewer/ImgVeiwer.PNG)
+
+![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/ImgViewer/ImgVeiwer2.PNG)
+
