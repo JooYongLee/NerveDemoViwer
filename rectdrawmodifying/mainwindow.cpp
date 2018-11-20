@@ -3,26 +3,79 @@
 #include "rectdragitem.h"
 #include "draggablerectitem.h"
 #include <QDebug>
+#include <QPixmap>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsProxyWidget>
+#include <QFormLayout>
+#include <QGraphicsLayout>
+#include <QDir>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+
+    imgslider =    new QSlider(Qt::Vertical,nullptr);
+//QSlider(, this)
+    imgslider->setRange(0,99);
+    imgslider->setValue(50);
+    imgslider->setGeometry(500,100,10,100);
+    button =    new QPushButton("box compute");
+    button->setGeometry(400,0,100,20);
+
+
     this->resize(1000,800);
+
+
+
+
+
     scene = new SceneItems(this);
-    scene->setSceneRect(0,0,900,700);
+    scene->setSceneRect(0,0,800,700);
+
+
+    scene->addWidget(button);
+    scene->addWidget(imgslider);
+    //proxy->setFlag(QGraphicsItem::ItemIsSelectable,false);
+
+
 
     view = new QGraphicsView(scene);
-//    view->setScene(scene_extra);
-//    view->setScene();
-
     setCentralWidget(view);
 
+    connect(imgslider,SIGNAL(valueChanged(int)),this,SLOT(imgslider_changed(int)));
+    connect(button, SIGNAL(clicked(bool)),this,SLOT(buttonclicked()));
 
     createAction();
     createConnection();
     creatToolBar();
 }
+void MainWindow::imgslider_changed(int num)
+{
+    QString img_path = "d:/";
+    QDir imgExplore(img_path);
+    imgExplore.setNameFilters(QStringList()<<\
+                         "*.jpg"<<\
+                         "*.png"<<\
+                         "*.bmp"<<
+                         "*.dcm");
+
+    QStringList file_list = imgExplore.entryList();
+    if( file_list.size() > 0 )
+    {
+        QString path = file_list.at((int)(file_list.size()*num/100));
+        path = img_path +  path;
+        scene->Redraw(path);
+    }
+}
+
+void MainWindow::buttonclicked()
+{
+    scene->ComputeBoxInImg();
+    qDebug()<<"buttonclicked";
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;

@@ -6,6 +6,8 @@
 #include <QGraphicsScene>
 #include <QToolBar>
 #include <QAction>
+#include <QSlider>
+#include <QPushButton>
 #include "scenebox.h"
 namespace Ui {
 class MainWindow;
@@ -26,6 +28,8 @@ public:
     ~MainWindow();
 public slots:
     void actioniGroupClick(QAction *action);
+    void buttonclicked();
+    void imgslider_changed(int);
 
 private:
     Ui::MainWindow *ui;
@@ -33,6 +37,9 @@ private:
     void creatToolBar();
     void createAction();
     void createConnection();
+
+    QSlider *imgslider;
+    QPushButton *button;
 
 
 
