@@ -23,7 +23,10 @@ Prerequisites
 * Box Drawing
 
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/drawbox.PNG)
-![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/drawbox1.PNG)
+
+![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/boxdraw1.PNG)
+
+* Checking Box Coordinate On Image
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/box_coordinate_onImage.PNG)
 
 
