@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     scene = new SceneItems(this);
-    scene->setSceneRect(0,0,800,700);
+    scene->setSceneRect(0,0,500,500);
 
 
     scene->addWidget(button);

@@ -23,6 +23,14 @@ public:
     }
 
 };
+inline QRectF ConstrainedRect(QRectF rect1, QRectF rect2)
+{
+    qreal left    = qMax(rect1.left()     ,rect2.left());
+    qreal right   = qMin(rect1.right()    ,rect2.right());
+    qreal top     = qMax(rect1.top()      ,rect2.top());
+    qreal bottom  = qMin(rect1.bottom()   ,rect2.bottom());
+    return QRectF(QPointF(left,top), QPointF(right,bottom));
+}
 void SceneItems::Redraw(QString path)
 {
     img.load(path);
@@ -43,6 +51,7 @@ SceneItems::SceneItems(QObject* parent):
     pixmapitem = new QGraphicsPixmapItem(img);
     pixmapitem->setFlag(QGraphicsItem::ItemIsSelectable,false);
     pixmapitem->setFlag(QGraphicsItem::ItemIsMovable,false);
+    pixmapitem->setPos(-50,-50);
 
     this->addItem(pixmapitem);
 
@@ -72,7 +81,7 @@ void SceneItems::setMode(Mode mode)
 
 void SceneItems::makeItemsControllable(bool areControllable){
     foreach(QGraphicsItem* item, items()){
-        QGraphicsRectItem *imgitem =  qgraphicsitem_cast<QGraphicsRectItem*>(item);
+        BoundingBox *imgitem =  qgraphicsitem_cast<BoundingBox*>(item);
         if( imgitem != nullptr )
         {
             item->setFlag(QGraphicsItem::ItemIsSelectable,
@@ -119,6 +128,17 @@ void SceneItems::ComputeBoxInImg()
     }
 
 }
+bool SceneItems::_isInsideImage(QPointF pressedPos)
+{
+    if(pixmapitem->sceneBoundingRect().contains(origPoint))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
     m_dragged = true;
@@ -131,19 +151,27 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
                      origPoint.y(),
                      0,0);
 
-        qDebug()<<this->sceneRect();
+//        qDebug()<<this->sceneRect();
 
-        qDebug()<<origPoint;
+        qDebug()<<origPoint<<pixmapitem->sceneBoundingRect();
 
-        if( !itemToDrawRect)
+
+
+
+
+        if( !itemToDrawRect && _isInsideImage(origPoint))
         {
-            itemToDrawRect = new QGraphicsRectItem;
+            itemToDrawRect = new BoundingBox;
+
             this->addItem(itemToDrawRect);
 
             itemToDrawRect->setRect(rect);
             QPen mypen(Qt::red);
             itemToDrawRect->setPen(mypen);
             itemToDrawRect->setPos(0,0);
+            itemToDrawRect->setSceneBoundingRect(pixmapitem->sceneBoundingRect());
+
+
 //            itemToDrawRect->setBrush(QBrush(QColor("#ffa07a")));
         }
     }
@@ -153,7 +181,7 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
         if( all_selected_items.size() == 1  )
         {
             QGraphicsItem *items = all_selected_items[0];
-            QGraphicsRectItem *selectBox= qgraphicsitem_cast<QGraphicsRectItem *>(items);
+            BoundingBox *selectBox= qgraphicsitem_cast<BoundingBox *>(items);
 
             if(selectBox != nullptr)
             {
@@ -172,7 +200,7 @@ double calc_distance(QPointF p1, QPointF p2)
 {
     return sqrt((p1.x() - p2.x() )*(p1.x() - p2.x() ) + (p1.y() - p2.y())*(p1.y() - p2.y()));
 }
-SceneItems::RectVerices SceneItems::_isSelectedVertex(QGraphicsRectItem *box, QPointF refpnt, double thresh)
+SceneItems::RectVerices SceneItems::_isSelectedVertex(BoundingBox *box, QPointF refpnt, double thresh)
 {
     QPointF MovedPnt = box->pos();
 
@@ -200,11 +228,13 @@ SceneItems::RectVerices SceneItems::_isSelectedVertex(QGraphicsRectItem *box, QP
 
     return SceneItems::RectVerices(selected_vertex);
 }
-void SceneItems::_ResizeBox(QGraphicsRectItem *box, QPointF dragPoint, RectVerices vertex)
+void SceneItems::_ResizeBox(BoundingBox *box, QPointF dragPoint, RectVerices vertex)
 {
 
     QRectF boxRect = box->rect();
     QRectF rect;
+    QPointF box_cetner = box->sceneBoundingRect().center();
+    QRectF imgRect = this->_GetPixmapRectOnDrawing(box_cetner);
     if( vertex == TopLeft )
     {
 //        views()[0]->setCursor(Qt::CrossCursor);
@@ -234,8 +264,34 @@ void SceneItems::_ResizeBox(QGraphicsRectItem *box, QPointF dragPoint, RectVeric
     {
         //return;
     }
+    rect = ConstrainedRect(imgRect,rect);
     box->setRect(rect);
 }
+QRectF SceneItems::_GetPixmapRectOnDrawing(QPointF preedPoint)
+{
+    if( pixmapitem->sceneBoundingRect().contains(preedPoint))
+    {
+        return pixmapitem->sceneBoundingRect();
+    }
+    else
+    {
+        return QRect();
+    }
+}
+QGraphicsItem* SceneItems::_GetItemOnDrawing(QPointF preedPoint)
+{
+    if( pixmapitem->sceneBoundingRect().contains(preedPoint))
+    {
+        return pixmapitem;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+
+
 void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
     QPointF dragPoint   =   event->scenePos();
     if(sceneMode == DrawLine)
@@ -243,12 +299,15 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
         qDebug()<<"buttonDownPos"<<event->scenePos();
         if( itemToDrawRect )
         {
-            qreal left  = origPoint.x() < dragPoint.x() ? origPoint.x():dragPoint.x();
-            qreal right = origPoint.x() > dragPoint.x() ? origPoint.x():dragPoint.x();
-            qreal top   = origPoint.y() < dragPoint.y() ? origPoint.y():dragPoint.y();
-            qreal bottom= origPoint.y() > dragPoint.y() ? origPoint.y():dragPoint.y();
+            qreal left  = qMin(origPoint.x(), dragPoint.x());
+            qreal right = qMax(origPoint.x(), dragPoint.x());
+            qreal top   = qMin(origPoint.y(), dragPoint.y());
+            qreal bottom= qMax(origPoint.y(), dragPoint.y());
+
 
             QRectF rectbox(QPointF(left,top), QPointF(right,bottom));
+            QRectF imgRect = _GetPixmapRectOnDrawing(origPoint);
+            rectbox = ConstrainedRect(rectbox, imgRect);
 
             itemToDrawRect->setRect(rectbox);
         }
@@ -260,7 +319,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
         if( all_selected_items.size() == 1  && m_dragged )
         {
             QGraphicsItem *items = all_selected_items[0];
-            QGraphicsRectItem *selectBox= qgraphicsitem_cast<QGraphicsRectItem *>(items);
+            BoundingBox *selectBox= qgraphicsitem_cast<BoundingBox *>(items);
 
             if(selectBox != nullptr)
             {
@@ -275,13 +334,31 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
                 }
                 else
                 {
-                     qDebug()<<"Not !!!!! _isSelectedVertex";
-                   //  QGraphicsScene::mouseMoveEvent(event);
+
+//                    QRectF boxRect = selectBox->sceneBoundingRect();
+
+//                    QPointF box_cetner = selectBox->sceneBoundingRect().center();
+
+
+//                    QRectF imgRect = this->_GetPixmapRectOnDrawing(box_cetner);
+//                    QGraphicsItem *drawingitem = this->_GetItemOnDrawing(box_cetner);
+
+//                    qreal dx = boxRect.right() > imgRect.right() ? -1 : boxRect.left() < imgRect.left() ? +1:0;
+//                    qreal dy = boxRect.bottom() > imgRect.bottom() ? -1 : boxRect.top() < imgRect.top() ? +1:0;
+//                    qDebug()<<dx<<dy;
+
+                    QGraphicsScene::mouseMoveEvent(event);
+
+//                    qDebug()<<selectBox->pos()<<dragPoint<<dragPoint-boxRect.topLeft();
+//                    selectBox->setPos(dragPoint+selectBox->pos());
+
+
                 }
             }
         }
         else
         {
+
             QGraphicsScene::mouseMoveEvent(event);
         }
 
@@ -305,7 +382,7 @@ void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
 void SceneItems::keyPressEvent(QKeyEvent *event){
     if(event->key() == Qt::Key_Delete)
         foreach(QGraphicsItem* item, selectedItems()){
-            QGraphicsRectItem *rect = qgraphicsitem_cast<QGraphicsRectItem*>(item);
+            BoundingBox *rect = qgraphicsitem_cast<BoundingBox*>(item);
             if( rect != nullptr )
             {
                 removeItem(item);

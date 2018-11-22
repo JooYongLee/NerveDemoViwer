@@ -3,6 +3,7 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include "boundingbox.h"
 class SceneItems : public QGraphicsScene
 {
 public :
@@ -15,6 +16,7 @@ public :
     void Redraw(QString path);
     void ComputeBoxInImg();
 protected:
+    bool _isInsideImage(QPointF pressedPos);
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
@@ -22,12 +24,14 @@ protected:
 private:
     bool m_dragged;
     QPixmap img;
-    RectVerices _isSelectedVertex(QGraphicsRectItem *box, QPointF refpnt, double thresh);
-    void _ResizeBox(QGraphicsRectItem *box, QPointF refpnt, RectVerices vertex);
+    QRectF _GetPixmapRectOnDrawing(QPointF preedPoint);
+    QGraphicsItem* _GetItemOnDrawing(QPointF preedPoint);
+    RectVerices _isSelectedVertex(BoundingBox *box, QPointF refpnt, double thresh);
+    void _ResizeBox(BoundingBox *box, QPointF refpnt, RectVerices vertex);
     void makeItemsControllable(bool areControllable);
     Mode sceneMode;
     QPointF origPoint;
-    QGraphicsRectItem* itemToDrawRect;
+    BoundingBox* itemToDrawRect;
     RectVerices _selectedBoxVertex;
 //    QGraphicsLineItem* itemToHorizonDraw;
 //    QGraphicsLineItem* itemToVerticalDraw;

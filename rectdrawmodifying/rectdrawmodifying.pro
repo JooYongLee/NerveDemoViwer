@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     rectdragitem.cpp \
     draggablerectitem.cpp \
-    scenebox.cpp
+    scenebox.cpp \
+    boundingbox.cpp
 
 HEADERS  += mainwindow.h \
     rectdragitem.h \
     draggablerectitem.h \
-    scenebox.h
+    scenebox.h \
+    boundingbox.h
 
 FORMS    += mainwindow.ui
 
