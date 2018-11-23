@@ -24,6 +24,7 @@ protected:
 private:
     bool m_dragged;
     QPixmap img;
+    QRectF _GetBoundingRectOnImg();
     QRectF _GetPixmapRectOnDrawing(QPointF preedPoint);
     QGraphicsItem* _GetItemOnDrawing(QPointF preedPoint);
     RectVerices _isSelectedVertex(BoundingBox *box, QPointF refpnt, double thresh);
@@ -31,10 +32,8 @@ private:
     void makeItemsControllable(bool areControllable);
     Mode sceneMode;
     QPointF origPoint;
-    BoundingBox* itemToDrawRect;
+    BoundingBox* itemBoundingBox;
     RectVerices _selectedBoxVertex;
-//    QGraphicsLineItem* itemToHorizonDraw;
-//    QGraphicsLineItem* itemToVerticalDraw;
 
 };
 

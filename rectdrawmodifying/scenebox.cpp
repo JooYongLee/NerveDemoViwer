@@ -13,6 +13,8 @@
 #include <QPushButton>
 #define IMG_WIDTH 400
 #define IMG_HEIGHT 400
+
+const double gloabl_rect_eidt_dist_thresh = 15.;
 class myImg : public QGraphicsPixmapItem
 {
 public:
@@ -23,6 +25,7 @@ public:
     }
 
 };
+
 inline QRectF ConstrainedRect(QRectF rect1, QRectF rect2)
 {
     qreal left    = qMax(rect1.left()     ,rect2.left());
@@ -57,7 +60,7 @@ SceneItems::SceneItems(QObject* parent):
 
 
     sceneMode = NoMode;
-    itemToDrawRect = 0;
+    itemBoundingBox = 0;
 }
 
 void SceneItems::setMode(Mode mode)
@@ -159,20 +162,20 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
 
 
 
-        if( !itemToDrawRect && _isInsideImage(origPoint))
+        if( !itemBoundingBox && _isInsideImage(origPoint))
         {
-            itemToDrawRect = new BoundingBox;
+            itemBoundingBox = new BoundingBox;
 
-            this->addItem(itemToDrawRect);
+            this->addItem(itemBoundingBox);
 
-            itemToDrawRect->setRect(rect);
+            itemBoundingBox->setRect(rect);
             QPen mypen(Qt::red);
-            itemToDrawRect->setPen(mypen);
-            itemToDrawRect->setPos(0,0);
-            itemToDrawRect->setSceneBoundingRect(pixmapitem->sceneBoundingRect());
+            itemBoundingBox->setPen(mypen);
+            itemBoundingBox->setPos(0,0);
+            itemBoundingBox->setSceneBoundingRect(pixmapitem->sceneBoundingRect());
 
 
-//            itemToDrawRect->setBrush(QBrush(QColor("#ffa07a")));
+//            itemBoundingBox->setBrush(QBrush(QColor("#ffa07a")));
         }
     }
     else
@@ -185,8 +188,8 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
 
             if(selectBox != nullptr)
             {
-                const double rect_eidt_dist_thresh = 10.;
-                _selectedBoxVertex = _isSelectedVertex(selectBox, origPoint, rect_eidt_dist_thresh);
+
+                _selectedBoxVertex = _isSelectedVertex(selectBox, origPoint, gloabl_rect_eidt_dist_thresh);
                 qDebug()<<"compute vertex";
             }
         }
@@ -297,7 +300,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
     if(sceneMode == DrawLine)
     {
         qDebug()<<"buttonDownPos"<<event->scenePos();
-        if( itemToDrawRect )
+        if( itemBoundingBox )
         {
             qreal left  = qMin(origPoint.x(), dragPoint.x());
             qreal right = qMax(origPoint.x(), dragPoint.x());
@@ -309,7 +312,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
             QRectF imgRect = _GetPixmapRectOnDrawing(origPoint);
             rectbox = ConstrainedRect(rectbox, imgRect);
 
-            itemToDrawRect->setRect(rectbox);
+            itemBoundingBox->setRect(rectbox);
         }
     }
     else
@@ -323,14 +326,16 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
 
             if(selectBox != nullptr)
             {
-                const double rect_eidt_dist_thresh = 10.;
+
 //                 _vertex;
 
 
                 if( _selectedBoxVertex!= NoneVertex)
                 {
                     qDebug()<<"_isSelectedVertex"<<_selectedBoxVertex<<origPoint;
+//                    selectBox->m_moving = false;
                     _ResizeBox(selectBox, dragPoint, _selectedBoxVertex);
+//                    selectBox->m_moving = true;
                 }
                 else
                 {
@@ -365,11 +370,30 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
     }
 
 }
+QRectF SceneItems::_GetBoundingRectOnImg()
+{
+    if( itemBoundingBox )
+    {
+        QRectF imgRect = this->_GetPixmapRectOnDrawing(this->origPoint);
+        qreal left = imgRect.left() - origPoint.x();
+        qreal top = imgRect.top() - origPoint.y();
+        qreal right = imgRect.right() - itemBoundingBox->sceneBoundingRect().right();
+        qreal bottom = imgRect.bottom() - itemBoundingBox->sceneBoundingRect().bottom();
+        return QRectF(QPointF(left,top), QPointF(right,bottom));
+    }
+    else
+    {
+        return this->sceneRect();
+    }
+}
 
 void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
     m_dragged = false;
     _selectedBoxVertex = NoneVertex;
-    itemToDrawRect = 0;
+    QRectF boundaryRect = this->_GetBoundingRectOnImg();
+    if( itemBoundingBox ) itemBoundingBox->setSceneBoundingRect(boundaryRect);
+
+    itemBoundingBox = 0;
     qDebug()<<"releaseed!!!!!!!!!!!!!!!!!!!!";
 //    views()[0]->setCursor(Qt::ArrowCursor);
 //    removeItem(itemToHorizonDraw);

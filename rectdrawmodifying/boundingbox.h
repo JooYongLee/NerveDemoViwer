@@ -13,10 +13,11 @@ public:
 
     }
     void setSceneBoundingRect(QRectF rect);
-//    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
-
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    //bool m_moving;
+    //void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 private :
+
     QRectF  _boundingRect;
 
 

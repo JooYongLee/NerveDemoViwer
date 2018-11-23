@@ -15,21 +15,24 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
     imgslider =    new QSlider(Qt::Vertical,nullptr);
-//QSlider(, this)
+
+    QSlider *ss =   new QSlider(Qt::Vertical,nullptr);
+    ss->setValue(50);
+    ss->setRange(0,99);
+    ss->setValue(50);
+    ss->setGeometry(650,100,10,100);
+
     imgslider->setRange(0,99);
     imgslider->setValue(50);
     imgslider->setGeometry(500,100,10,100);
+
+
+
     button =    new QPushButton("box compute");
     button->setGeometry(400,0,100,20);
 
-
     this->resize(1000,800);
-
-
-
-
 
     scene = new SceneItems(this);
     scene->setSceneRect(0,0,500,500);
@@ -37,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     scene->addWidget(button);
     scene->addWidget(imgslider);
+//    scene->addWidget(ss);
     //proxy->setFlag(QGraphicsItem::ItemIsSelectable,false);
 
 
