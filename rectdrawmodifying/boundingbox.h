@@ -3,9 +3,12 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsItem>
 #include <QGraphicsScene>
-
+#include <QWheelEvent>
+#include <QDebug>
 class BoundingBox : public QGraphicsRectItem
 {
+
+//    Q_OBJECT
 public:
     BoundingBox(QGraphicsItem *parent = 0);
     ~BoundingBox()
@@ -14,11 +17,18 @@ public:
     }
     void setSceneBoundingRect(QRectF rect);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    void wheelEvent(QWheelEvent *event)
+    {
+        qDebug()<<__FUNCTION__;
+    }
+
     //bool m_moving;
     //void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 private :
 
     QRectF  _boundingRect;
+
+
 
 
 };

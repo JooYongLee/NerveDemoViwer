@@ -9,11 +9,88 @@
 #include <QFormLayout>
 #include <QGraphicsLayout>
 #include <QDir>
+//void myQView::wheelEvent(QWheelEvent* event)
+//{
+//    qDebug()<<__FUNCTION__;
+
+
+////    handleWheelOnGraphicsScene(static_cast<QGraphicsSceneWheelEvent*> (event));
+//}
+void MainWindow::wheelEvent(QWheelEvent* event)
+{
+    scene->wheelEvent(event);
+        qDebug()<<__FUNCTION__;
+
+}
+void MainWindow::CreateFileMenu()
+{
+    QAction *newAct;
+    QAction *openAct;
+
+    newAct = new QAction(tr("&New"), this);
+//    newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
+    newAct->setShortcuts(QKeySequence::New);
+    newAct->setStatusTip(tr("Create a new file"));
+//    connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
+
+//    openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
+    openAct = new QAction(tr("&Open..."), this);
+    openAct->setShortcuts(QKeySequence::Open);
+    openAct->setStatusTip(tr("Open an existing file"));
+//    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+
+    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(newAct);
+    fileMenu->addAction(openAct);
+
+}
+void MainWindow::CreateDockWidget()
+{
+
+    QDockWidget *dock = new QDockWidget(tr("Bounding Box"), this);
+    QDockWidget *dock2 = new QDockWidget(tr("File List"), this);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dock2->setAllowedAreas(Qt::RightDockWidgetArea  & Qt::TopDockWidgetArea);
+
+    boundingBoxList = new QListWidget(dock);
+    boundingBoxList->addItems(QStringList()
+            << "One"
+            << "Two"
+            << "Three"
+            << "Four"
+            << "Five");
+
+
+
+    QListWidget *customerList2 = new QListWidget(dock);
+    QStringList strs;
+    for(int i = 0; i<100;i++)
+    {
+        QString s = QString("file%1").arg(i,3,10, QChar('0'));
+        strs.append(s);
+    }
+    customerList2->addItems(strs);
+    //customerList2->item()
+
+
+    dock->setWidget(boundingBoxList);
+    dock2->setWidget(customerList2);
+    addDockWidget(Qt::RightDockWidgetArea, dock2);
+    addDockWidget(Qt::RightDockWidgetArea, dock);
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    CreateFileMenu();
+    CreateDockWidget();
+
+
+
+
 
     imgslider =    new QSlider(Qt::Vertical,nullptr);
 
@@ -23,37 +100,55 @@ MainWindow::MainWindow(QWidget *parent) :
     ss->setValue(50);
     ss->setGeometry(650,100,10,100);
 
-    imgslider->setRange(0,99);
-    imgslider->setValue(50);
-    imgslider->setGeometry(500,100,10,100);
 
 
 
     button =    new QPushButton("box compute");
-    button->setGeometry(400,0,100,20);
+    button->setGeometry(800,0,100,30);
 
-    this->resize(1000,800);
+//    this->resize(1000,800);
+    this->showMaximized();
 
     scene = new SceneItems(this);
     scene->setSceneRect(0,0,500,500);
 
 
+
     scene->addWidget(button);
-    scene->addWidget(imgslider);
-//    scene->addWidget(ss);
-    //proxy->setFlag(QGraphicsItem::ItemIsSelectable,false);
 
 
 
-    view = new QGraphicsView(scene);
+    view = new myQView;//(scene);
+
+    view->setScene(scene);    
     setCentralWidget(view);
 
-    connect(imgslider,SIGNAL(valueChanged(int)),this,SLOT(imgslider_changed(int)));
+
+
+
     connect(button, SIGNAL(clicked(bool)),this,SLOT(buttonclicked()));
+    connect(scene,SIGNAL(valuechanged()),this,SLOT(boxListUpdate()));
 
     createAction();
     createConnection();
     creatToolBar();
+
+
+}
+void MainWindow::boxListUpdate()
+{
+    qDebug()<<boundingBoxList->size();
+    qDebug()<<boundingBoxList->count();
+
+    for(int i = 0; i<boundingBoxList->count();i++)
+    {
+        qDebug()<<boundingBoxList->item(i)->text();
+
+
+    }
+//    boundingBoxList->model()->removeRow(0);
+    boundingBoxList->addItem("bounding Box");
+    qDebug()<<"boxListUpdate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\";
 }
 void MainWindow::imgslider_changed(int num)
 {
