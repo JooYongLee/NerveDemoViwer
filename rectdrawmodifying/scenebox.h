@@ -5,6 +5,7 @@
 #include <QGraphicsPixmapItem>
 #include <QWheelEvent>
 #include <QDebug>
+#include <QGraphicsLineItem>
 #include "boundingbox.h"
 #define IMG_WIDTH 700
 #define IMG_HEIGHT 800
@@ -54,6 +55,7 @@ public :
     void Redraw(QString path);
     void ComputeBoxInImg();
     void wheelEvent(QWheelEvent* event);
+    void createGuideLine();
 signals:
     void valuechanged();
 
@@ -66,6 +68,11 @@ public:
     void keyPressEvent(QKeyEvent *event);
 private:
     bool m_dragged;
+
+    QGraphicsLineItem *GuideLineToHorizonDraw;
+    QGraphicsLineItem *GuideLineToVerticalDraw;
+    void DrawGuideLine(QPointF center);
+
 
     QRectF _GetBoundingRectOnImg();
     QRectF _GetPixmapRectOnDrawing(QPointF preedPoint);

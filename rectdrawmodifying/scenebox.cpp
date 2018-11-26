@@ -73,23 +73,20 @@ void myImg::wheelEvent(QWheelEvent *event)
     qreal dVariant = event->delta()/(125.*50);
     m_dScaled += dVariant;
 
-//    this->setOffset(100,100);
-//    this->setScale(scalesize);
-//    if( m_dScaled < 1.0 )
-//    {
+
         QCursor mousecursor = cursor();
         QPoint viewcursor = scene()->views().first()->mapFromGlobal(mousecursor.pos());
         QPointF scenepos = scene()->views().first()->mapToScene(viewcursor);
 
         qDebug()<<(scenepos - this->sceneBoundingRect().topLeft());
         qDebug()<<"mouse"<<mousecursor.pos()<<viewcursor<<scenepos;
-//        this
+
 
         QPixmap img =  m_pixmap.copy(this->GetScaledRect(scenepos, dVariant));
         img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
         this->setPixmap(img);
         qDebug()<<__FUNCTION__<<event->delta()<<this->offset()<<m_dScaled;
-//    }
+
 
 
 }
@@ -121,7 +118,9 @@ void SceneItems::Redraw(QString path)
 SceneItems::SceneItems(QObject* parent):
     QGraphicsScene(parent),
     m_dragged(false),
-    _selectedBoxVertex(NoneVertex)
+    _selectedBoxVertex(NoneVertex),
+    GuideLineToHorizonDraw(nullptr),
+    GuideLineToVerticalDraw(nullptr)
 {
     QPixmap img;
     img.load("d:/yuna.jpg");
@@ -137,6 +136,26 @@ SceneItems::SceneItems(QObject* parent):
 
     sceneMode = NoMode;
     itemBoundingBox = 0;
+
+
+    createGuideLine();
+
+
+}
+void SceneItems::createGuideLine()
+{
+    if(!GuideLineToHorizonDraw){
+        GuideLineToHorizonDraw = new QGraphicsLineItem;
+        this->addItem(GuideLineToHorizonDraw);
+        GuideLineToHorizonDraw->setPen(QPen(Qt::blue, 1, Qt::DashDotLine));
+        GuideLineToHorizonDraw->setPos(QPointF(0,0));
+    }
+    if(!GuideLineToVerticalDraw){
+        GuideLineToVerticalDraw = new QGraphicsLineItem;
+        this->addItem(GuideLineToVerticalDraw);
+        GuideLineToVerticalDraw->setPen(QPen(Qt::blue, 1, Qt::DashDotLine));
+        GuideLineToVerticalDraw->setPos(QPointF(0,0));
+    }
 }
 
 void SceneItems::setMode(Mode mode)
@@ -193,17 +212,7 @@ void SceneItems::ComputeBoxInImg()
         }
 
         qDebug()<<"colliding item exists";
-/*        QGraphicsItem* closestItem = colItems.at(0);
-        qreal shortestDist = 100000;
-        foreach(QGraphicsItem* item, colItems){
-            QLineF line(item->sceneBoundingRect().center(),
-                        this->sceneBoundingRect().center());
-            if(line.length() < shortestDist){
-                shortestDist = line.length();
-                closestItem = item;
-            }
-        }
-        this->setPos(closestItem->scenePos())*/;
+
     }
 
 }
@@ -229,8 +238,6 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
         QRectF rect( origPoint.x(),
                      origPoint.y(),
                      0,0);
-
-//        qDebug()<<this->sceneRect();
 
         qDebug()<<origPoint<<pixmapitem->sceneBoundingRect();
 
@@ -404,8 +411,27 @@ QGraphicsItem* SceneItems::_GetItemOnDrawing(QPointF preedPoint)
 }
 
 
+void SceneItems::DrawGuideLine(QPointF center)
+{
+    int dt = 300;
+    GuideLineToHorizonDraw->setLine(
+                        center.x()-dt,
+                        center.y(),
+                        center.x()+dt,
+                        center.y());
+
+    GuideLineToVerticalDraw->setLine(
+                        center.x(),
+                        center.y()-dt,
+                        center.x(),
+                        center.y()+dt);
+}
 
 void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
+
+
+    DrawGuideLine(event->scenePos());
+
     QPointF dragPoint   =   event->scenePos();
     if(sceneMode == DrawLine)
     {
@@ -428,7 +454,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
     else
     {
         QList<QGraphicsItem*> all_selected_items = selectedItems();
-//        qDebug()<<"selected items"<<all_selected_items.size();
+        //        qDebug()<<"selected items"<<all_selected_items.size();
         if( all_selected_items.size() == 1  && m_dragged )
         {
             QGraphicsItem *items = all_selected_items[0];
@@ -437,36 +463,36 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
             if(selectBox != nullptr)
             {
 
-//                 _vertex;
+                //                 _vertex;
 
 
                 if( _selectedBoxVertex!= NoneVertex)
                 {
                     qDebug()<<"_isSelectedVertex"<<selectBox->sceneBoundingRect();
-//                    selectBox->m_moving = false;
+                    //                    selectBox->m_moving = false;
                     _ResizeBox(selectBox, dragPoint, _selectedBoxVertex);
-//                    selectBox->m_moving = true;
+                    //                    selectBox->m_moving = true;
                 }
                 else
                 {
 
-//                    QRectF boxRect = selectBox->sceneBoundingRect();
+                    //                    QRectF boxRect = selectBox->sceneBoundingRect();
 
-//                    QPointF box_cetner = selectBox->sceneBoundingRect().center();
+                    //                    QPointF box_cetner = selectBox->sceneBoundingRect().center();
 
 
-//                    QRectF imgRect = this->_GetPixmapRectOnDrawing(box_cetner);
-//                    QGraphicsItem *drawingitem = this->_GetItemOnDrawing(box_cetner);
+                    //                    QRectF imgRect = this->_GetPixmapRectOnDrawing(box_cetner);
+                    //                    QGraphicsItem *drawingitem = this->_GetItemOnDrawing(box_cetner);
 
-//                    qreal dx = boxRect.right() > imgRect.right() ? -1 : boxRect.left() < imgRect.left() ? +1:0;
-//                    qreal dy = boxRect.bottom() > imgRect.bottom() ? -1 : boxRect.top() < imgRect.top() ? +1:0;
-//                    qDebug()<<dx<<dy;
+                    //                    qreal dx = boxRect.right() > imgRect.right() ? -1 : boxRect.left() < imgRect.left() ? +1:0;
+                    //                    qreal dy = boxRect.bottom() > imgRect.bottom() ? -1 : boxRect.top() < imgRect.top() ? +1:0;
+                    //                    qDebug()<<dx<<dy;
 
                     QGraphicsScene::mouseMoveEvent(event);
                     qDebug()<<selectBox->sceneBoundingRect();
 
-//                    qDebug()<<selectBox->pos()<<dragPoint<<dragPoint-boxRect.topLeft();
-//                    selectBox->setPos(dragPoint+selectBox->pos());
+                    //                    qDebug()<<selectBox->pos()<<dragPoint<<dragPoint-boxRect.topLeft();
+                    //                    selectBox->setPos(dragPoint+selectBox->pos());
 
 
                 }
