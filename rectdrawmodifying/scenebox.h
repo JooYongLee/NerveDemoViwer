@@ -57,7 +57,7 @@ public :
     void wheelEvent(QWheelEvent* event);
     void createGuideLine();
 signals:
-    void valuechanged();
+    void valuechanged(QBoxitem*);
 
 public:
     bool _isInsideImage(QPointF pressedPos);
@@ -75,6 +75,7 @@ private:
 
 
     QRectF _GetBoundingRectOnImg();
+    // get the scenerect of  graphicspixmapitem when drawing box
     QRectF _GetPixmapRectOnDrawing(QPointF preedPoint);
     QGraphicsItem* _GetItemOnDrawing(QPointF preedPoint);
     RectVerices _isSelectedVertex(BoundingBox *box, QPointF refpnt, double thresh);

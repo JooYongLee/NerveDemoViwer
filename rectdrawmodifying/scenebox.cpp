@@ -87,8 +87,6 @@ void myImg::wheelEvent(QWheelEvent *event)
         this->setPixmap(img);
         qDebug()<<__FUNCTION__<<event->delta()<<this->offset()<<m_dScaled;
 
-
-
 }
 
 
@@ -123,7 +121,7 @@ SceneItems::SceneItems(QObject* parent):
     GuideLineToVerticalDraw(nullptr)
 {
     QPixmap img;
-    img.load("d:/yuna.jpg");
+    img.load("d:/dog.jpg");
     img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
     pixmapitem = new myImg(img);
     pixmapitem->setFlag(QGraphicsItem::ItemIsSelectable,false);
@@ -371,20 +369,8 @@ void SceneItems::_ResizeBox(BoundingBox *box, QPointF dragPoint, RectVerices ver
 //    rect.moveTo(box->pos());
 
 
+     box->setRect( rect);
 
-
-//    qDebug()<<"result"<<rect.topLeft()<<rect.bottomRight();
-//    qDebug()<<"box/drag"<<boxRect.topLeft()<<boxRect.bottomRight()<<dragPoint;
-//    qDebug()<<"box pos"<<box->pos();
-//    qDebug()<<"box pos"<<box->rect();
-//     qDebug()<<"resizing"<<boxRect << box->sceneBoundingRect()<<boxRect.center()-box->sceneBoundingRect().center();
-//     qDebug()<<"resizing"<<box->pos()<< box->scenePos();
-//    box->setRect( rect.x() - box->rect().x(), rect.y() -box->rect().y() , rect.width(), rect.height());
-//    box->setRect( rect);//box->pos().x(), box->pos().y(), rect.width(), rect.height());//rect.x() - box->rect().x(), rect.y() -box->rect().y() , rect.width(), rect.height());
-     box->setRect( rect
-                   );
-
-//    box->setPos( )
 
 }
 QRectF SceneItems::_GetPixmapRectOnDrawing(QPointF preedPoint)
@@ -413,18 +399,39 @@ QGraphicsItem* SceneItems::_GetItemOnDrawing(QPointF preedPoint)
 
 void SceneItems::DrawGuideLine(QPointF center)
 {
-    int dt = 300;
-    GuideLineToHorizonDraw->setLine(
-                        center.x()-dt,
-                        center.y(),
-                        center.x()+dt,
-                        center.y());
+    qreal dTop    = 0;
+    qreal dLeft   = 0;
+    qreal dRight  = 0;
+    qreal dBottom = 0;
+    if( this->_GetItemOnDrawing(center) != nullptr)
+    {
+        QRectF imgRect = _GetPixmapRectOnDrawing(center);
 
-    GuideLineToVerticalDraw->setLine(
-                        center.x(),
-                        center.y()-dt,
-                        center.x(),
-                        center.y()+dt);
+        dTop    = qAbs( center.y()  - imgRect.top() );
+        dLeft   = qAbs( center.x()  - imgRect.left());
+        dRight  = qAbs( imgRect.right() - center.x()    ) ;
+        dBottom = qAbs( imgRect.bottom()  - center.y()    );
+
+        GuideLineToHorizonDraw->setLine(
+                            center.x()-dLeft,
+                            center.y(),
+                            center.x()+dRight,
+                            center.y());
+
+        GuideLineToVerticalDraw->setLine(
+                            center.x(),
+                            center.y()-dTop,
+                            center.x(),
+                            center.y()+dBottom);
+        GuideLineToHorizonDraw->show();
+        GuideLineToVerticalDraw->show();
+
+    }
+    else
+    {
+        GuideLineToHorizonDraw->hide();
+        GuideLineToVerticalDraw->hide();
+    }
 }
 
 void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
@@ -527,26 +534,9 @@ void SceneItems::wheelEvent(QWheelEvent* event)
 {
     qDebug()<<__FUNCTION__;
     pixmapitem->wheelEvent(event);
-    //    enum ItemSelectionMode {
-    //        ContainsItemShape = 0x0,
-    //        IntersectsItemShape = 0x1,
-    //        ContainsItemBoundingRect = 0x2,
-    //        IntersectsItemBoundingRect = 0x3
-    //    };
+
     QList<QGraphicsItem*> colItems = collidingItems(pixmapitem);//, Qt::ItemSelectionMode::);
 
-    //    if(colItems.isEmpty())
-    //    {
-    //        qDebug()<<"empty colliding";
-    //        foreach(QGraphicsItem* allitem, items())
-    //        {
-    //            BoundingBox *box = qgraphicsitem_cast<BoundingBox*>(allitem);
-    //            if(box!=nullptr)
-    //            {
-    //                qDebug()<<"box exists...................!!";
-    //            }
-
-    //        }
 
 
 
@@ -590,28 +580,14 @@ void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
     QRectF boundaryRect = this->_GetBoundingRectOnImg();
     if( itemBoundingBox )
     {
-//        emit listupdate(1);
-        emit valuechanged();
+        emit valuechanged(&QBoxitem());
 
-
-
-//        foreach (QGraphicsItem *items, this->views().first()->items()) {
-//            qDebug()<<"-------------";
-
-//        }
-
-//        views()->fir
         itemBoundingBox->setSceneBoundingRect(boundaryRect);
-
     }
 
     itemBoundingBox = 0;
     qDebug()<<"releaseed!!!!!!!!!!!!!!!!!!!!";
-//    views()[0]->setCursor(Qt::ArrowCursor);
-//    removeItem(itemToHorizonDraw);
-//    removeItem(itemToVerticalDraw);
-//    itemToHorizonDraw = 0;
-//    itemToVerticalDraw = 0;
+
     QGraphicsScene::mouseReleaseEvent(event);
 }
 

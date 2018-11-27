@@ -127,7 +127,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     connect(button, SIGNAL(clicked(bool)),this,SLOT(buttonclicked()));
-    connect(scene,SIGNAL(valuechanged()),this,SLOT(boxListUpdate()));
+    connect(scene,SIGNAL(valuechanged(QBoxitem*)),this,SLOT(boxListUpdate(QBoxitem*)));
+
+
 
     createAction();
     createConnection();
@@ -135,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 }
-void MainWindow::boxListUpdate()
+void MainWindow::boxListUpdate(QBoxitem* box)
 {
     qDebug()<<boundingBoxList->size();
     qDebug()<<boundingBoxList->count();
@@ -143,11 +145,13 @@ void MainWindow::boxListUpdate()
     for(int i = 0; i<boundingBoxList->count();i++)
     {
         qDebug()<<boundingBoxList->item(i)->text();
-
-
     }
+    QString boxstr =  QString("ClassID : %1 , Width : %2 : Height :%3").arg(box->id_class)
+            .arg((int)(box->left))
+            .arg((int)(box->right));
+    qDebug()<<__FUNCTION__<<boxstr;
 //    boundingBoxList->model()->removeRow(0);
-    boundingBoxList->addItem("bounding Box");
+    boundingBoxList->addItem(boxstr);
     qDebug()<<"boxListUpdate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\";
 }
 void MainWindow::imgslider_changed(int num)

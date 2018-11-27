@@ -14,6 +14,7 @@
 #include <QStatusBar>
 
 #include "scenebox.h"
+#include "boundingbox.h"
 namespace Ui {
 class MainWindow;
 }
@@ -59,7 +60,8 @@ public slots:
     void actioniGroupClick(QAction *action);
     void buttonclicked();
     void imgslider_changed(int);
-    void boxListUpdate();
+    void boxListUpdate(QBoxitem* box);
+
 
 private:
     Ui::MainWindow *ui;

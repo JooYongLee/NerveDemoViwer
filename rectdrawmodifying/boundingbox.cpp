@@ -36,3 +36,13 @@ QVariant BoundingBox::itemChange(GraphicsItemChange change, const QVariant &valu
     }
     return QGraphicsItem::itemChange(change, value);
 }
+
+//QBoxitem BoundingBox::TranserBox()
+//{
+//    box = QBoxitem( this->sceneBoundingRect().left(),
+//                    this->sceneBoundingRect().top(),
+//                    this->sceneBoundingRect().width(),
+//                    this->sceneBoundingRect().height());
+
+//    return box;
+//}
