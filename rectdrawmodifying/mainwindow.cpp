@@ -103,8 +103,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-    button =    new QPushButton("box compute");
-    button->setGeometry(800,0,100,30);
+//    button =    new QPushButton("box compute");
+//    button->setGeometry(800,0,100,30);
 
 //    this->resize(1000,800);
     this->showMaximized();
@@ -114,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-    scene->addWidget(button);
+//    scene->addWidget(button);
 
 
 
@@ -126,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-    connect(button, SIGNAL(clicked(bool)),this,SLOT(buttonclicked()));
+//    connect(button, SIGNAL(clicked(bool)),this,SLOT(buttonclicked()));
     connect(scene,SIGNAL(valuechanged(QBoxitem*)),this,SLOT(boxListUpdate(QBoxitem*)));
 
 
@@ -142,17 +142,20 @@ void MainWindow::boxListUpdate(QBoxitem* box)
     qDebug()<<boundingBoxList->size();
     qDebug()<<boundingBoxList->count();
 
-    for(int i = 0; i<boundingBoxList->count();i++)
-    {
-        qDebug()<<boundingBoxList->item(i)->text();
-    }
-    QString boxstr =  QString("ClassID : %1 , Width : %2 : Height :%3").arg(box->id_class)
+//    for(int i = 0; i<boundingBoxList->count();i++)
+//    {
+//        qDebug()<<boundingBoxList->item(i)->text();
+//    }
+    QString boxstr =  QString("ClassID : %1,(X,Y,W,H)<%2,%3,%4,%5>").arg(box->id_class)
             .arg((int)(box->left))
-            .arg((int)(box->right));
-    qDebug()<<__FUNCTION__<<boxstr;
-//    boundingBoxList->model()->removeRow(0);
+            .arg((int)(box->top))
+            .arg((int)(box->right - box->left+1))
+            .arg((int)(box->bottom - box->top+1));
     boundingBoxList->addItem(boxstr);
-    qDebug()<<"boxListUpdate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\";
+//    qDebug()<<__FUNCTION__<<boxstr;
+//    boundingBoxList->model()->removeRow(0);
+
+//    qDebug()<<"boxListUpdate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\";
 }
 void MainWindow::imgslider_changed(int num)
 {

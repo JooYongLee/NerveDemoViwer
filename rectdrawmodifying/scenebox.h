@@ -7,13 +7,14 @@
 #include <QDebug>
 #include <QGraphicsLineItem>
 #include "boundingbox.h"
-#define IMG_WIDTH 700
-#define IMG_HEIGHT 800
+#define IMG_WIDTH 1000
+#define IMG_HEIGHT 900
 
 class myImg : public QGraphicsPixmapItem
 {    
 public:
     QPixmap m_pixmap;
+    QSize   m_imgSize;
     qreal   m_dScaled;
     QRectF  m_dScaledRect;
     QRect GetScaledRect(QPointF pnt, qreal dVariant);
@@ -25,19 +26,20 @@ public:
         this->setFlag(QGraphicsItem::ItemIsSelectable,true);
     }
     myImg(QPixmap img)
-        :QGraphicsPixmapItem(img),
+        : QGraphicsPixmapItem(img.scaled(IMG_WIDTH,IMG_HEIGHT)),
           m_dScaled(1.0)
     {
+//        img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
+        m_imgSize = img.size();
         m_dScaledRect = QRectF(0,0,IMG_WIDTH,IMG_HEIGHT);
         m_pixmap = img.copy();
         this->setFlag(QGraphicsItem::ItemIsSelectable,true);
 //        QRect r = boundingRect();
 //        this->setShapeMode(ShapeMode::BoundingRectShape);
 
-
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    void wheelEvent(QWheelEvent *event);
+//    void wheelEvent(QWheelEvent *event);
 
 };
 
@@ -72,6 +74,7 @@ private:
     QGraphicsLineItem *GuideLineToHorizonDraw;
     QGraphicsLineItem *GuideLineToVerticalDraw;
     void DrawGuideLine(QPointF center);
+    QBoxitem _ConvertBoundingBox(BoundingBox *box);
 
 
     QRectF _GetBoundingRectOnImg();

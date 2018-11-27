@@ -5,21 +5,26 @@
 #include <QGraphicsScene>
 #include <QWheelEvent>
 #include <QDebug>
-class QBoxitem : public QObject
+#include <QUuid>
+class QBoxitem
 {
-    Q_OBJECT
+
 public:
     enum BoxClass { BACKGROUND, NERVE, LOWERCASE };
-    QBoxitem(qreal x_min = 0, qreal y_min = 0, qreal width = 0, qreal height = 0)
-        :
-          left(x_min),
+//    explicit QBoxitem(QObject *parent ):
+//        QObject(parent)
+//    {}
+//    QBoxitem( QObject *parent = 0) : QObject(parent){}
+
+    QBoxitem(qreal x_min = 0, qreal y_min = 0, qreal width = 0, qreal height= 0)
+        : left(x_min),
           top(y_min),
           right(x_min+width-1),
           bottom(y_min+height-1),
           id_class(NERVE)
-
     {
-
+        uid_box = QUuid::createUuid();
+        qDebug()<<uid_box;
     }
     ~QBoxitem(){}
     qreal left ;
@@ -27,8 +32,7 @@ public:
     qreal top;
     qreal bottom;
     int   id_class;
-
-
+    QUuid  uid_box;
 };
 
 class BoundingBox : public QGraphicsRectItem
@@ -57,7 +61,6 @@ public:
     //bool m_moving;
     //void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 private :
-//    QBoxitem box;
 
     QRectF  _boundingRect;
 

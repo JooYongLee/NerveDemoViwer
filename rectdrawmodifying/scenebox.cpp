@@ -29,23 +29,18 @@ QRect myImg::GetScaledRect(QPointF pnt, qreal dVariant)
 
     if( m_dScaled < 1.0 )
     {
-
         m_dScaledRect.setX(m_dScaledRect.x() + m_dScaledRect.width() * normalized_x);
         m_dScaledRect.setY(m_dScaledRect.y() + m_dScaledRect.height() * normalized_y);
-
     }
     else
     {
         m_dScaledRect.setX(0);
         m_dScaledRect.setY(0);
-
     }
 
     m_dScaledRect.setWidth(width);
     m_dScaledRect.setHeight(height);
     qDebug()<<normalized_x<<normalized_y<<"--------"<<m_dScaled<<"---"<<m_dScaledRect;
-
-
 
     return QRect((int)m_dScaledRect.left(),
                  (int)m_dScaledRect.top(),
@@ -56,8 +51,7 @@ void myImg::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 {
        this->setPos(-100,-100);
 
-
-      painter->setBrush(QBrush(Qt::red));
+      painter->setBrush(QBrush(QColor(192,255,0)));
       QRectF r = this->sceneBoundingRect();
       double mRadius = 10;
       r.setSize(r.size()+mRadius*QSizeF(1, 1));
@@ -65,33 +59,28 @@ void myImg::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
       qDebug()<<this->scenePos()<<r;
       painter->drawRect(r);
       QGraphicsPixmapItem::paint(painter, option, widget);
-
 }
 
-void myImg::wheelEvent(QWheelEvent *event)
-{
-    qreal dVariant = event->delta()/(125.*50);
-    m_dScaled += dVariant;
+//void myImg::wheelEvent(QWheelEvent *event)
+//{
+//    qreal dVariant = event->delta()/(125.*50);
+//    m_dScaled += dVariant;
 
 
-        QCursor mousecursor = cursor();
-        QPoint viewcursor = scene()->views().first()->mapFromGlobal(mousecursor.pos());
-        QPointF scenepos = scene()->views().first()->mapToScene(viewcursor);
+//        QCursor mousecursor = cursor();
+//        QPoint viewcursor = scene()->views().first()->mapFromGlobal(mousecursor.pos());
+//        QPointF scenepos = scene()->views().first()->mapToScene(viewcursor);
 
-        qDebug()<<(scenepos - this->sceneBoundingRect().topLeft());
-        qDebug()<<"mouse"<<mousecursor.pos()<<viewcursor<<scenepos;
-
-
-        QPixmap img =  m_pixmap.copy(this->GetScaledRect(scenepos, dVariant));
-        img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
-        this->setPixmap(img);
-        qDebug()<<__FUNCTION__<<event->delta()<<this->offset()<<m_dScaled;
-
-}
+//        qDebug()<<(scenepos - this->sceneBoundingRect().topLeft());
+//        qDebug()<<"mouse"<<mousecursor.pos()<<viewcursor<<scenepos;
 
 
+//        QPixmap img =  m_pixmap.copy(this->GetScaledRect(scenepos, dVariant));
+//        img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
+//        this->setPixmap(img);
+//        qDebug()<<__FUNCTION__<<event->delta()<<this->offset()<<m_dScaled;
 
-
+//}
 
 
 
@@ -122,14 +111,14 @@ SceneItems::SceneItems(QObject* parent):
 {
     QPixmap img;
     img.load("d:/dog.jpg");
-    img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
+//
     pixmapitem = new myImg(img);
     pixmapitem->setFlag(QGraphicsItem::ItemIsSelectable,false);
     pixmapitem->setFlag(QGraphicsItem::ItemIsMovable,false);
-//    pixmapitem->setPos(0,0);
+
 
     this->addItem(pixmapitem);
-//    pixmapitem->paint();
+
 
 
     sceneMode = NoMode;
@@ -142,16 +131,17 @@ SceneItems::SceneItems(QObject* parent):
 }
 void SceneItems::createGuideLine()
 {
+    QColor darkred(255,210,210);
     if(!GuideLineToHorizonDraw){
         GuideLineToHorizonDraw = new QGraphicsLineItem;
         this->addItem(GuideLineToHorizonDraw);
-        GuideLineToHorizonDraw->setPen(QPen(Qt::blue, 1, Qt::DashDotLine));
+        GuideLineToHorizonDraw->setPen(QPen(darkred, 1, Qt::DashDotLine));
         GuideLineToHorizonDraw->setPos(QPointF(0,0));
     }
     if(!GuideLineToVerticalDraw){
         GuideLineToVerticalDraw = new QGraphicsLineItem;
         this->addItem(GuideLineToVerticalDraw);
-        GuideLineToVerticalDraw->setPen(QPen(Qt::blue, 1, Qt::DashDotLine));
+        GuideLineToVerticalDraw->setPen(QPen(darkred, 1, Qt::DashDotLine));
         GuideLineToVerticalDraw->setPos(QPointF(0,0));
     }
 }
@@ -187,7 +177,6 @@ void SceneItems::makeItemsControllable(bool areControllable){
         }
         else
         {
-//            qDebug()<<"---------------------------";
 
         }
 
@@ -254,7 +243,6 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
             itemBoundingBox->setPen(mypen);
             itemBoundingBox->setPos(0,0);
             itemBoundingBox->setSceneBoundingRect(pixmapitem->sceneBoundingRect());
-
 
 //            itemBoundingBox->setBrush(QBrush(QColor("#ffa07a")));
         }
@@ -437,7 +425,10 @@ void SceneItems::DrawGuideLine(QPointF center)
 void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
 
 
+
     DrawGuideLine(event->scenePos());
+
+    qDebug()<<"=============================";
 
     QPointF dragPoint   =   event->scenePos();
     if(sceneMode == DrawLine)
@@ -512,6 +503,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
         }
 
     }
+    QGraphicsScene::mouseMoveEvent(event);
 
 }
 QRectF SceneItems::_GetBoundingRectOnImg()
@@ -533,7 +525,7 @@ QRectF SceneItems::_GetBoundingRectOnImg()
 void SceneItems::wheelEvent(QWheelEvent* event)
 {
     qDebug()<<__FUNCTION__;
-    pixmapitem->wheelEvent(event);
+//    pixmapitem->wheelEvent(event);
 
     QList<QGraphicsItem*> colItems = collidingItems(pixmapitem);//, Qt::ItemSelectionMode::);
 
@@ -569,9 +561,34 @@ void SceneItems::wheelEvent(QWheelEvent* event)
             }
 
         }
-
     }
 
+}
+
+QBoxitem SceneItems::_ConvertBoundingBox(BoundingBox *box)
+{
+    QRectF view_domain_rect = box->sceneBoundingRect();
+    QRectF imgRect = pixmapitem->sceneBoundingRect();
+
+    qDebug()<<"box rect"<<view_domain_rect;
+    qDebug()<<"img rect"<<imgRect;
+
+    QSize origin_size = pixmapitem->m_imgSize;
+
+
+    qreal x_min = view_domain_rect.left() - imgRect.left();
+    qreal x_max = view_domain_rect.right() - imgRect.left();
+    qreal y_min = view_domain_rect.top() - imgRect.top();
+    qreal y_max = view_domain_rect.bottom() - imgRect.top();
+
+    x_min = x_min / imgRect.width() * origin_size.width();
+    x_max = x_max / imgRect.width() * origin_size.width();
+    y_min = y_min / imgRect.height() * origin_size.height();
+    y_max = y_max / imgRect.height() * origin_size.height();
+
+    QBoxitem src_domain_box(x_min,y_min,x_max-x_min+1,y_max-y_min+1);
+
+    return src_domain_box;
 }
 
 void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
@@ -580,7 +597,9 @@ void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
     QRectF boundaryRect = this->_GetBoundingRectOnImg();
     if( itemBoundingBox )
     {
-        emit valuechanged(&QBoxitem());
+        QBoxitem boxitems = _ConvertBoundingBox(itemBoundingBox);
+//        QBoxitem a = QBoxitem(0,0,0,0);
+        emit valuechanged(&boxitems);
 
         itemBoundingBox->setSceneBoundingRect(boundaryRect);
     }
