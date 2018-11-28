@@ -24,7 +24,7 @@ Prerequisites
 
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/annotation_tools.png)
 
-![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/annotation_tool_ver1128.png)
+![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/annotation_tool_ver1128.PNG)
 
 
 
