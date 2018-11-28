@@ -7,41 +7,9 @@
 #include <QDebug>
 #include <QGraphicsLineItem>
 #include "boundingbox.h"
-#define IMG_WIDTH 1000
-#define IMG_HEIGHT 900
+#include "imgitem.h"
 
-class myImg : public QGraphicsPixmapItem
-{    
-public:
-    QPixmap m_pixmap;
-    QSize   m_imgSize;
-    qreal   m_dScaled;
-    QRectF  m_dScaledRect;
-    QRect GetScaledRect(QPointF pnt, qreal dVariant);
-    myImg(QGraphicsItem *parent = 0)
-        :QGraphicsPixmapItem(parent),
-          m_dScaled(1.0)
-    {
-        qDebug()<<"initalized"<<m_dScaled;
-        this->setFlag(QGraphicsItem::ItemIsSelectable,true);
-    }
-    myImg(QPixmap img)
-        : QGraphicsPixmapItem(img.scaled(IMG_WIDTH,IMG_HEIGHT)),
-          m_dScaled(1.0)
-    {
-//        img = img.scaled(IMG_WIDTH,IMG_HEIGHT);
-        m_imgSize = img.size();
-        m_dScaledRect = QRectF(0,0,IMG_WIDTH,IMG_HEIGHT);
-        m_pixmap = img.copy();
-        this->setFlag(QGraphicsItem::ItemIsSelectable,true);
-//        QRect r = boundingRect();
-//        this->setShapeMode(ShapeMode::BoundingRectShape);
 
-    }
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-//    void wheelEvent(QWheelEvent *event);
-
-};
 
 class SceneItems : public QGraphicsScene
 {
@@ -53,11 +21,15 @@ public :
     SceneItems(QObject *parent = 0 );
     void setMode(Mode mode);
 
-    myImg *pixmapitem;
+    ImgItem *pixmapitem;
     void Redraw(QString path);
+    void Redraw(QString path,  QMap<int,QBoxitem> boxitems );
     void ComputeBoxInImg();
     void wheelEvent(QWheelEvent* event);
     void createGuideLine();
+    void UpdateBoxItems(BoundingBox *box);
+
+
 signals:
     void valuechanged(QBoxitem*);
 
@@ -71,12 +43,24 @@ public:
 private:
     bool m_dragged;
 
+    int m_nNumBoundingBoxes;
+
+    void _ResetBoxCount()                   {   m_nNumBoundingBoxes = 0;    }
+    int _GetBoxCount()                      {   return m_nNumBoundingBoxes; }
+    int _GetBoxCountAndIncreaseCount()      {   return m_nNumBoundingBoxes++; }
+
+
+    void _DeleteAllBoxItems();
+
+
+
     QGraphicsLineItem *GuideLineToHorizonDraw;
     QGraphicsLineItem *GuideLineToVerticalDraw;
     void DrawGuideLine(QPointF center);
     QBoxitem _ConvertBoundingBox(BoundingBox *box);
+    QRectF _ConvertInverseBoundingBox(QBoxitem *box);
 
-
+    QRectF _GetBoundingRectOnImg(QRectF scenerect, QPointF pos );
     QRectF _GetBoundingRectOnImg();
     // get the scenerect of  graphicspixmapitem when drawing box
     QRectF _GetPixmapRectOnDrawing(QPointF preedPoint);

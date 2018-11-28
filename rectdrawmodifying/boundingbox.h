@@ -6,6 +6,9 @@
 #include <QWheelEvent>
 #include <QDebug>
 #include <QUuid>
+
+
+
 class QBoxitem
 {
 
@@ -23,16 +26,31 @@ public:
           bottom(y_min+height-1),
           id_class(NERVE)
     {
-        uid_box = QUuid::createUuid();
-        qDebug()<<uid_box;
+//        uid_box = QUuid::createUuid();
+//        qDebug()<<uid_box;
     }
     ~QBoxitem(){}
+    void setID(QUuid id)        {  uid_box = id;}
+    QUuid getID() const          {   return uid_box;}
     qreal left ;
     qreal right;
     qreal top;
     qreal bottom;
     int   id_class;
+private:
     QUuid  uid_box;
+};
+
+class BoxManager
+{
+public:
+    BoxManager(){}
+    virtual ~BoxManager(){}
+    // interface with unique number and the number of qlistwidget
+    QMap<int,QBoxitem> boxmap;
+    // image file name
+    QString filename;
+    int     id_filename;
 };
 
 class BoundingBox : public QGraphicsRectItem
@@ -46,6 +64,7 @@ public:
     {
 
     }
+    void SetProperty(QRectF scene_rect, QRectF bounding_rect, QUuid uid, int box_id);
     void setSceneBoundingRect(QRectF rect);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
     void wheelEvent(QWheelEvent *event)
@@ -55,8 +74,6 @@ public:
 
 
     int     id_class;
-
-    QBoxitem TranserBox();
 
     //bool m_moving;
     //void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

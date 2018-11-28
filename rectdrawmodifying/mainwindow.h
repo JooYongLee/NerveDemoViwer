@@ -12,7 +12,10 @@
 #include <QListWidget>
 #include <QTextEdit>
 #include <QStatusBar>
-
+#include <QFileDialog>
+#include <QStringList>
+#include <QMimeData>
+#include "filemanager.h"
 #include "scenebox.h"
 #include "boundingbox.h"
 namespace Ui {
@@ -44,39 +47,71 @@ class MainWindow : public QMainWindow
 
 public:
 
-
-
     enum Mode {NoMode, SelectObject, DrawLine};
+
+    QList<BoxManager> BoxesList;
+
+    void RedrawViwer(int id_item);
 
     SceneItems *scene;
     myQView *view;
 
     QListWidget *boundingBoxList;
+    QListWidget *fileListWidget;
 
 
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    void dragEnterEvent(QDragEnterEvent *);
+
+    void dropEvent(QDropEvent *);
 public slots:
     void actioniGroupClick(QAction *action);
     void buttonclicked();
-    void imgslider_changed(int);
-    void boxListUpdate(QBoxitem* box);
+
+    void boxListUpdate(int id_box, QBoxitem* box);
+    void addBoxListToViwer(QBoxitem* box);
+
+    void OpenFileDialog();
+    void fileListClicked(QListWidgetItem*);
+    void fileListChanged(int);
+    void actionBoxSave();
+
+
 
 
 private:
+
+    QString _GetBoxStringFormat(QBoxitem *box);
+
+    int m_NumImgInViwer;
+    void _SetStatusImg(int n){  m_NumImgInViwer = n;}
+    int _GetStatusImg(){     return m_NumImgInViwer;}
+    FileManger fileManager;
     Ui::MainWindow *ui;
 
     void creatToolBar();
     void createAction();
     void createConnection();
 
-    void CreateFileMenu();
+
+
+    void CreateFileMenu();    
     void CreateDockWidget();
+    void CreateFileMenuConnection();
+
+    void UpdateFileListWidget();
+    void ResetFileMangerAndUpdateFileList(QFileInfo fileinfo);
+
+
 
     QSlider *imgslider;
     QPushButton *button;
 
-
+    QAction *newAct;
+    QAction *openAct;
+    QMenu *fileMenu;
 
     void wheelEvent(QWheelEvent *event);
 
@@ -84,7 +119,10 @@ private:
 
     QAction *selectAction;
     QAction *drawAction;
+    QAction *saveAction;
+    QAction *dnnAction;
     QActionGroup *actionGroup;
+
 
     QToolBar *drawingToolBar;
 };

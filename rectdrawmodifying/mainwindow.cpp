@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "rectdragitem.h"
-#include "draggablerectitem.h"
+
+
 #include <QDebug>
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
@@ -9,6 +9,7 @@
 #include <QFormLayout>
 #include <QGraphicsLayout>
 #include <QDir>
+#include "filemanager.h"
 //void myQView::wheelEvent(QWheelEvent* event)
 //{
 //    qDebug()<<__FUNCTION__;
@@ -24,8 +25,7 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 }
 void MainWindow::CreateFileMenu()
 {
-    QAction *newAct;
-    QAction *openAct;
+
 
     newAct = new QAction(tr("&New"), this);
 //    newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
@@ -39,11 +39,13 @@ void MainWindow::CreateFileMenu()
     openAct->setStatusTip(tr("Open an existing file"));
 //    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
 
 }
+
+
 void MainWindow::CreateDockWidget()
 {
 
@@ -53,81 +55,99 @@ void MainWindow::CreateDockWidget()
     dock2->setAllowedAreas(Qt::RightDockWidgetArea  & Qt::TopDockWidgetArea);
 
     boundingBoxList = new QListWidget(dock);
-    boundingBoxList->addItems(QStringList()
-            << "One"
-            << "Two"
-            << "Three"
-            << "Four"
-            << "Five");
+    boundingBoxList->addItems(QStringList());
 
 
 
-    QListWidget *customerList2 = new QListWidget(dock);
+    fileListWidget = new QListWidget(dock);
     QStringList strs;
-    for(int i = 0; i<100;i++)
-    {
-        QString s = QString("file%1").arg(i,3,10, QChar('0'));
-        strs.append(s);
-    }
-    customerList2->addItems(strs);
+    fileListWidget->addItems(strs);
     //customerList2->item()
 
 
     dock->setWidget(boundingBoxList);
-    dock2->setWidget(customerList2);
+    dock2->setWidget(fileListWidget);
     addDockWidget(Qt::RightDockWidgetArea, dock2);
     addDockWidget(Qt::RightDockWidgetArea, dock);
+}
+void MainWindow::OpenFileDialog()
+{
+    QString filepath;
+    filepath = QFileDialog::getOpenFileName(
+                this,
+                tr("Open Image"),
+                QString(),
+                tr("Image Files (*.png *.jpg *.bmp *.dcm)"));
+    QFileInfo fileinfo(filepath);
+
+
+    if( filepath.length() > 0 )
+    {
+        ResetFileMangerAndUpdateFileList(fileinfo);
+        fileListChanged(0);
+    }
+
+}
+void MainWindow::ResetFileMangerAndUpdateFileList(QFileInfo fileinfo)
+{
+
+    fileManager.setPath(fileinfo.path());
+    qDebug()<<fileManager.path();
+    fileManager.ResearchImgList();
+    UpdateFileListWidget();
+}
+
+void MainWindow::CreateFileMenuConnection()
+{
+    connect(openAct,SIGNAL(triggered(bool)),this,SLOT(OpenFileDialog()));
+
 }
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_NumImgInViwer(1)
 {
     ui->setupUi(this);
+    this->setAcceptDrops(true);
 
     CreateFileMenu();
+    CreateFileMenuConnection();
     CreateDockWidget();
-
-
-
-
 
     imgslider =    new QSlider(Qt::Vertical,nullptr);
 
-    QSlider *ss =   new QSlider(Qt::Vertical,nullptr);
-    ss->setValue(50);
-    ss->setRange(0,99);
-    ss->setValue(50);
-    ss->setGeometry(650,100,10,100);
+//    BoxesList.insert()
 
-
-
-
-//    button =    new QPushButton("box compute");
-//    button->setGeometry(800,0,100,30);
-
-//    this->resize(1000,800);
     this->showMaximized();
+//    this->resize(700,800);
 
     scene = new SceneItems(this);
-    scene->setSceneRect(0,0,500,500);
-
-
-
-//    scene->addWidget(button);
-
+    scene->setSceneRect(-100,-50,900,800);
 
 
     view = new myQView;//(scene);
+    view->setMouseTracking(true);
 
     view->setScene(scene);    
     setCentralWidget(view);
+//    fileListWidget->mouse
+
+
+    connect(fileListWidget,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
+    connect(fileListWidget,SIGNAL(itemChanged(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
+    connect(fileListWidget,SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
+    connect(fileListWidget,SIGNAL(itemEntered(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
+    connect(fileListWidget,SIGNAL(itemPressed(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
+    connect(fileListWidget,SIGNAL(currentRowChanged(int)),this,SLOT(fileListChanged(int)));
+
+    //connect(fileListWidget,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
 
 
 
+    connect(scene,SIGNAL(valuechanged(QBoxitem*)),this,SLOT(addBoxListToViwer(QBoxitem*)));
 
-//    connect(button, SIGNAL(clicked(bool)),this,SLOT(buttonclicked()));
-    connect(scene,SIGNAL(valuechanged(QBoxitem*)),this,SLOT(boxListUpdate(QBoxitem*)));
+
 
 
 
@@ -137,43 +157,141 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 }
-void MainWindow::boxListUpdate(QBoxitem* box)
+void MainWindow::fileListChanged(int file_num)
 {
-    qDebug()<<boundingBoxList->size();
-    qDebug()<<boundingBoxList->count();
+    //qDebug()<<file_num;
+//    fileListWidget->row
+    QString selectFilename = fileListWidget->item(file_num)->text();
+//    qDebug()<<file_num<<selectFilename;
 
-//    for(int i = 0; i<boundingBoxList->count();i++)
-//    {
-//        qDebug()<<boundingBoxList->item(i)->text();
-//    }
-    QString boxstr =  QString("ClassID : %1,(X,Y,W,H)<%2,%3,%4,%5>").arg(box->id_class)
-            .arg((int)(box->left))
-            .arg((int)(box->top))
-            .arg((int)(box->right - box->left+1))
-            .arg((int)(box->bottom - box->top+1));
-    boundingBoxList->addItem(boxstr);
-//    qDebug()<<__FUNCTION__<<boxstr;
-//    boundingBoxList->model()->removeRow(0);
 
-//    qDebug()<<"boxListUpdate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\";
+    QString full_abs_path = fileManager.GetBasePath() + '/' +   selectFilename;
+    scene->Redraw(full_abs_path, BoxesList.at(file_num).boxmap );
+    _SetStatusImg(file_num);
+    RedrawViwer(file_num);
+
+
+
+
 }
-void MainWindow::imgslider_changed(int num)
-{
-    QString img_path = "d:/";
-    QDir imgExplore(img_path);
-    imgExplore.setNameFilters(QStringList()<<\
-                         "*.jpg"<<\
-                         "*.png"<<\
-                         "*.bmp"<<
-                         "*.dcm");
 
-    QStringList file_list = imgExplore.entryList();
-    if( file_list.size() > 0 )
-    {
-        QString path = file_list.at((int)(file_list.size()*num/100));
-        path = img_path +  path;
-        scene->Redraw(path);
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
     }
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    QStringList filelist;
+    foreach (const QUrl &url, event->mimeData()->urls()) {
+        QString fileName = url.toLocalFile();
+//        qDebug() << "Dropped file:" << fileName;
+        filelist.append(fileName);
+    }
+
+
+    QFileInfo fileinfo(filelist.first());
+    this->ResetFileMangerAndUpdateFileList(fileinfo);
+    fileListChanged(0);
+
+
+
+
+//    qDebug()<<"basename"<<fileinfo.baseName();
+//    qDebug()<<"path"<<fileinfo.path();
+//    qDebug()<<fileinfo.absolutePath();
+//    qDebug()<<fileinfo.absoluteFilePath();
+}
+void MainWindow::RedrawViwer(int id_item)
+{
+    QMap<int,QBoxitem> boxitems = BoxesList.at(id_item).boxmap;
+
+    qDebug()<<__FUNCTION__<<id_item<<BoxesList.at(id_item).filename;
+
+    QMapIterator<int,QBoxitem> iter(boxitems);
+     boundingBoxList->clear();
+    while (iter.hasNext()) {
+        iter.next();
+        qDebug()<< iter.key() << ": " << _GetBoxStringFormat((QBoxitem*)&iter.value());
+//        iter.value()
+        boxListUpdate(iter.key(),(QBoxitem*)&iter.value());
+    }
+    //if( boxitems.size() == 0)
+}
+void MainWindow::fileListClicked(QListWidgetItem *items)
+{
+    int item_ind = items->listWidget()->row(items);
+
+
+    QString full_abs_path = fileManager.GetBasePath() + '/' +   items->text();
+
+    scene->Redraw(full_abs_path, BoxesList.at(item_ind).boxmap );
+
+
+    _SetStatusImg(item_ind);
+    RedrawViwer(item_ind);
+
+   // boxListUpdate();
+}
+
+void MainWindow::UpdateFileListWidget()
+{
+    QStringList imglist = fileManager.GetImgList();
+    imglist.sort();
+
+
+    fileListWidget->clear();    
+    qDebug()<<__FUNCTION__<<imglist;
+    qDebug()<<__FUNCTION__<<fileManager.GetBasePath();
+    qDebug()<<__FUNCTION__<<fileListWidget->count();
+    fileListWidget->addItems(imglist);
+    qDebug()<<__FUNCTION__<<fileListWidget->count();
+
+    BoxesList.clear();
+//    BoxesList.reserve(imglist.size());
+//    qDebug()<<"+++++++++"<<BoxesList.size()<<imglist.size();
+    for( int ind = 0; ind < imglist.size(); ind++)
+    {
+        BoxManager imgbox;
+        imgbox.filename = imglist.at(ind);
+        imgbox.id_filename = ind;
+        BoxesList.append(imgbox);
+//        qDebug()<<BoxesList.at(ind).filename<<BoxesList.at(ind).id_filename;
+    }
+}
+QString MainWindow::_GetBoxStringFormat(QBoxitem *box)
+{
+    QString boxstr =  QString("ClassID : %1,(X,Y,W,H)<%2,%3,%4,%5>").arg(box->id_class)
+            .arg((int)(box->left),4)
+            .arg((int)(box->top),4)
+            .arg((int)(box->right - box->left+1),4)
+            .arg((int)(box->bottom - box->top+1),4);
+    return boxstr;
+}
+
+void MainWindow::boxListUpdate(int ind, QBoxitem* box)
+{
+    boundingBoxList->insertItem(ind, _GetBoxStringFormat(box));
+}
+
+void MainWindow::addBoxListToViwer(QBoxitem* box)
+{
+    qDebug()<<__FUNCTION__;
+    int    row_id = boundingBoxList->count();
+
+    QString boxstr = _GetBoxStringFormat(box);
+
+
+    boundingBoxList->insertItem(row_id,boxstr);
+    qDebug()<<__FUNCTION__<<"_GetBoxStringFormat"<<boundingBoxList->count()<<row_id;
+    qDebug()<<__FUNCTION__<<_GetStatusImg()<<BoxesList.size();//->count()<<row_id;
+    //qDebug()<<__FUNCTION__<<boxstr<<box->getID();
+//    BoxesList.at(_GetStatusImg()).boxmap.insert(row_id, QBoxitem());
+    if( _GetStatusImg() < BoxesList.size())
+        BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);
 }
 
 void MainWindow::buttonclicked()
@@ -188,20 +306,35 @@ MainWindow::~MainWindow()
 }
 void MainWindow::createAction()
 {
+
+    this->dnnAction = new QAction("Save Boxes",this);
+    this->dnnAction->setIcon(QIcon(":/icons/dnnicon.png"));
+    this->dnnAction->setCheckable(false);
+
+    this->saveAction = new QAction("Save Boxes",this);
+    this->saveAction->setData(SceneItems::NoMode);//QIcon(":/icons/saveicon.png"));
+    this->saveAction->setIcon(QIcon(":/icons/saveicon.png"));
+    this->saveAction->setCheckable(false);
+
+    // graphics item actions
     this->selectAction = new QAction("Select Item",this);
     this->selectAction->setData(SceneItems::SelectObject);
     this->selectAction->setIcon(QIcon(":/icons/select.png"));
     this->selectAction->setCheckable(true);
+//    this->selectAction->setSho
 
 
     this->drawAction = new QAction("draw item",this);
     this->drawAction->setData(SceneItems::DrawLine);
-    this->drawAction->setIcon(QIcon(":/icons/line.png"));
+    this->drawAction->setIcon(QIcon(":/icons/drawbox.png"));
     this->drawAction->setCheckable(true);
+
 
     actionGroup = new QActionGroup(this);
     actionGroup->addAction(selectAction);
     actionGroup->addAction(drawAction);
+//    actionGroup->addAction(saveAction);
+//    actionGroup->
     qDebug()<<"====================";
 }
 void MainWindow::actioniGroupClick(QAction *action)
@@ -213,13 +346,27 @@ void MainWindow::createConnection()
 {
     connect(actionGroup, SIGNAL(triggered(QAction*)),
                                 this, SLOT(actioniGroupClick(QAction*) ));
+
+    connect(saveAction, SIGNAL(triggered(bool)), this, SLOT(actionBoxSave()));
 }
+void MainWindow::actionBoxSave()
+{
+    qDebug()<<__FUNCTION__;
+
+}
+
 void MainWindow::creatToolBar()
 {
     drawingToolBar  =   new QToolBar;
-    addToolBar(Qt::TopToolBarArea, drawingToolBar);
+//    drawingToolBar->setFixedWidth(200);
+    addToolBar(Qt::LeftToolBarArea, drawingToolBar);
+
+    drawingToolBar->setIconSize(QSize(80,80));
+
 
     drawingToolBar->addAction(selectAction);
     drawingToolBar->addAction(drawAction);
+    drawingToolBar->addAction(saveAction);
+    drawingToolBar->addAction(dnnAction);
 
 }

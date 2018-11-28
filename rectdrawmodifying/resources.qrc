@@ -2,5 +2,8 @@
     <qresource prefix="/icons">
         <file>line.png</file>
         <file>select.png</file>
+        <file>drawbox.png</file>
+        <file>saveicon.png</file>
+        <file>dnnicon.png</file>
     </qresource>
 </RCC>
