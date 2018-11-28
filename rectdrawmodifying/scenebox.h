@@ -23,15 +23,20 @@ public :
 
     ImgItem *pixmapitem;
     void Redraw(QString path);
-    void Redraw(QString path,  QMap<int,QBoxitem> boxitems );
+    void Redraw(QString path,  QList<QBoxitem> boxitems );
     void ComputeBoxInImg();
     void wheelEvent(QWheelEvent* event);
     void createGuideLine();
-    void UpdateBoxItems(BoundingBox *box);
+    void UpdateBoxItems();
+
+    void changeBoxClass(QBoxitem::BoxClass id_class)      { m_nBoxClass = id_class;}
+
 
 
 signals:
     void valuechanged(QBoxitem*);
+    void deletedItems(QUuid*);
+    void updateItems(QBoxitem*);
 
 public:
     bool _isInsideImage(QPointF pressedPos);
@@ -41,6 +46,8 @@ public:
 
     void keyPressEvent(QKeyEvent *event);
 private:
+
+    int  m_nBoxClass;
     bool m_dragged;
 
     int m_nNumBoundingBoxes;

@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     scenebox.cpp \
     boundingbox.cpp \
     imgitem.cpp \
-    filemanager.cpp
+    filemanager.cpp \
+    classtoolbarbutton.cpp
 
 HEADERS  += mainwindow.h \    
     scenebox.h \
@@ -26,7 +27,8 @@ HEADERS  += mainwindow.h \
     imgitem.h \
     defineconfigure.h \
     filemanager.h \
-    rectdragitem.h
+    rectdragitem.h \
+    classtoolbarbutton.h
 
 FORMS    += mainwindow.ui
 

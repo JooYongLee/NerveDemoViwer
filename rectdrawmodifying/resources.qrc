@@ -5,5 +5,7 @@
         <file>drawbox.png</file>
         <file>saveicon.png</file>
         <file>dnnicon.png</file>
+        <file>nerve.png</file>
+        <file>toothbone.png</file>
     </qresource>
 </RCC>

@@ -7,16 +7,19 @@ public:
     BoxClass();
     ~BoxClass();
 };
-void BoundingBox::SetProperty(QRectF scene_rect, QRectF bounding_rect, QUuid uid, int box_id)
+void BoundingBox::SetProperty(QRectF scene_rect, QRectF bounding_rect, QUuid uid, int box_id, QBoxitem::BoxClass _id_class)
 {
     this->setSceneBoundingRect(bounding_rect);
     this->setRect(scene_rect);
     this->setData(QVariant::Type::Uuid, uid);
     this->setData(QVariant::Type::Int, box_id);
+    this->SetBoxClass(_id_class);
 }
 
-BoundingBox::BoundingBox(QGraphicsItem *parent )
-    :QGraphicsRectItem(parent), _boundingRect(QRectF(-100,-100,200,200))
+BoundingBox::BoundingBox(QGraphicsItem *parent, QBoxitem::BoxClass box_flag )
+    :QGraphicsRectItem(parent), _boundingRect(QRectF(-100,-100,200,200)),
+      id_class(box_flag)
+
 {
     this->setFlags(QGraphicsItem::ItemIsMovable
                    | QGraphicsItem::ItemIsSelectable
@@ -24,7 +27,11 @@ BoundingBox::BoundingBox(QGraphicsItem *parent )
                    //| QGraphicsItem::ItemSendsScenePositionChanges
                    );
 
-    QPen mypen(Qt::red);
+    QPen mypen;
+    if( id_class == QBoxitem::NERVE )
+        mypen = QPen(Qt::green,2);
+    else
+        mypen = QPen(Qt::red,2);
     this->setPen(mypen);
 }
 

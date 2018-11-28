@@ -95,6 +95,11 @@ void MainWindow::ResetFileMangerAndUpdateFileList(QFileInfo fileinfo)
     qDebug()<<fileManager.path();
     fileManager.ResearchImgList();
     UpdateFileListWidget();
+
+    scene->changeBoxClass(QBoxitem::BoxClass(m_nClassId));
+//    m_classBarButton->data;
+
+//    qDebug()<<__FUNCTION__<<m_classBarButton-();
 }
 
 void MainWindow::CreateFileMenuConnection()
@@ -106,7 +111,7 @@ void MainWindow::CreateFileMenuConnection()
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_NumImgInViwer(1)
+    m_NumImgInViwer(0)
 {
     ui->setupUi(this);
     this->setAcceptDrops(true);
@@ -116,6 +121,8 @@ MainWindow::MainWindow(QWidget *parent) :
     CreateDockWidget();
 
     imgslider =    new QSlider(Qt::Vertical,nullptr);
+
+    BoxesList.append(BoxManager());
 
 //    BoxesList.insert()
 
@@ -146,14 +153,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     connect(scene,SIGNAL(valuechanged(QBoxitem*)),this,SLOT(addBoxListToViwer(QBoxitem*)));
-
-
+    connect(scene,SIGNAL(deletedItems(QUuid*)),this,SLOT(DeleteBoxList(QUuid*)));
+    connect(scene,SIGNAL(updateItems(QBoxitem*)),this,SLOT(updateSelectBox(QBoxitem*)));
 
 
 
     createAction();
     createConnection();
     creatToolBar();
+
+    createToolBarActions();
+    createToolBarMenu();
+    createToolBarButtons();
+    createClassToolBars();
+
 
 
 }
@@ -207,18 +220,23 @@ void MainWindow::dropEvent(QDropEvent *event)
 }
 void MainWindow::RedrawViwer(int id_item)
 {
-    QMap<int,QBoxitem> boxitems = BoxesList.at(id_item).boxmap;
+    QList<QBoxitem> boxitems = BoxesList.at(id_item).boxmap;
 
     qDebug()<<__FUNCTION__<<id_item<<BoxesList.at(id_item).filename;
 
-    QMapIterator<int,QBoxitem> iter(boxitems);
+//    QMapIterator<int,QBoxitem> iter(boxitems);
      boundingBoxList->clear();
-    while (iter.hasNext()) {
-        iter.next();
-        qDebug()<< iter.key() << ": " << _GetBoxStringFormat((QBoxitem*)&iter.value());
+     for( int ind_key = 0; ind_key < boxitems.count(); ind_key++)
+     {
+        boxListUpdate(ind_key,(QBoxitem*)&boxitems.at(ind_key));
+
+     }
+//    while (iter.hasNext()) {
+//        iter.next();
+//        qDebug()<< iter.key() << ": " << _GetBoxStringFormat((QBoxitem*)&iter.value());
 //        iter.value()
-        boxListUpdate(iter.key(),(QBoxitem*)&iter.value());
-    }
+//        boxListUpdate(iter.key(),(QBoxitem*)&iter.value());
+//    }
     //if( boxitems.size() == 0)
 }
 void MainWindow::fileListClicked(QListWidgetItem *items)
@@ -271,6 +289,71 @@ QString MainWindow::_GetBoxStringFormat(QBoxitem *box)
             .arg((int)(box->bottom - box->top+1),4);
     return boxstr;
 }
+void MainWindow::updateSelectBox(QBoxitem *selectBox)
+{
+    qDebug()<<__FUNCTION__<<selectBox->getID();
+    if( selectBox )
+    {
+        // get box info from current image from viwer
+        int file_num = _GetStatusImg();
+        QList<QBoxitem> boxitems = BoxesList.at(file_num).boxmap;
+        QUuid selected_id = selectBox->getID();
+        // check uuid with given selected box among from list-widet
+        for( int ind_key = 0; ind_key < boxitems.count(); ind_key++)
+        {
+            QBoxitem box = boxitems.at(ind_key);
+            if( selected_id == box.getID())
+            {
+                int ind_update_key = ind_key;
+                BoxesList[file_num].boxmap[ind_update_key] = *selectBox;
+
+                boundingBoxList->item(ind_update_key)->setText(_GetBoxStringFormat(selectBox));
+
+                break;
+            }
+        }
+        qDebug()<<__FUNCTION__<<"after"<<BoxesList[file_num].boxmap.count();
+
+    }
+
+}
+
+void MainWindow::DeleteBoxList(QUuid *tobeDeletedItem)
+{
+    if( tobeDeletedItem != nullptr &&
+            ( _GetStatusImg() < BoxesList.size()))
+    {
+        int file_num = _GetStatusImg();
+
+
+        qDebug()<<__FUNCTION__<<"before"<<BoxesList[file_num].boxmap.count();
+        QList<QBoxitem> boxitems = BoxesList.at(file_num).boxmap;
+
+        for( int ind_key = 0; ind_key < boxitems.count(); ind_key++)
+        {
+            QBoxitem box = boxitems.at(ind_key);
+            if( *tobeDeletedItem == box.getID())
+            {
+                int ind_delete_key = ind_key;
+//                qDebug()<<__FUNCTION__<<"delete items"<<ind_delete_key<<*tobeDeletedItem;
+                boxListDelete(ind_delete_key);
+
+//                boundingBoxList->item(ind_key)->setText(_GetBoxStringFormat(*tobeDeletedItem));
+                BoxesList[file_num].boxmap.removeAt(ind_delete_key);
+                break;
+            }
+        }
+//        qDebug()<<__FUNCTION__<<"after"<<BoxesList[file_num].boxmap.count();
+
+    }
+
+}
+void MainWindow::boxListDelete(int ind)
+{
+    qDebug()<<__FUNCTION__<<ind<<boundingBoxList->item(ind)->text();
+    boundingBoxList->takeItem(ind);
+//    boundingBoxList->removeItemWidget(boundingBoxList->item(ind));
+}
 
 void MainWindow::boxListUpdate(int ind, QBoxitem* box)
 {
@@ -291,7 +374,10 @@ void MainWindow::addBoxListToViwer(QBoxitem* box)
     //qDebug()<<__FUNCTION__<<boxstr<<box->getID();
 //    BoxesList.at(_GetStatusImg()).boxmap.insert(row_id, QBoxitem());
     if( _GetStatusImg() < BoxesList.size())
+    {
+        qDebug()<<__FUNCTION__<<"add box to viewer"<<box->getID();
         BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);
+    }
 }
 
 void MainWindow::buttonclicked()
@@ -369,4 +455,62 @@ void MainWindow::creatToolBar()
     drawingToolBar->addAction(saveAction);
     drawingToolBar->addAction(dnnAction);
 
+}
+
+
+
+void MainWindow::triggeredNerve()
+{
+    scene->changeBoxClass(QBoxitem::BoxClass::NERVE);
+    m_nClassId = QBoxitem::NERVE;
+}
+
+void MainWindow::triggeredLowercase()
+{
+    scene->changeBoxClass(QBoxitem::BoxClass::LOWERCASE);
+    m_nClassId = QBoxitem::LOWERCASE;
+}
+
+void MainWindow::createToolBarActions()
+{
+    ActionNerve   =   new QAction("Nerve",this);
+    ActionNerve->setData(QBoxitem::NERVE);
+//    ActionCoronal->setIcon(QIcon(":/icon/skull_coronal.png"));
+    ActionLowerCase  =   new QAction("Lowercase",this);
+    ActionLowerCase->setData(QBoxitem::LOWERCASE);
+
+    ActionNerve->setIcon(QIcon(":/icons/nerve.png"));
+    ActionLowerCase->setIcon(QIcon(":/icons/toothbone.png"));
+
+
+    connect(ActionNerve   , SIGNAL(triggered()), this, SLOT(triggeredNerve()));
+    connect(ActionLowerCase  , SIGNAL(triggered()), this, SLOT(triggeredLowercase()));
+
+}
+void MainWindow::createToolBarMenu()
+{
+    ClassViewMenu = new QMenu;
+    ClassViewMenu->addAction(ActionNerve);
+    ClassViewMenu->addAction(ActionLowerCase);
+
+}
+
+void MainWindow::createToolBarButtons()
+{
+    m_classBarButton = new ClassToolBarButton();
+    m_classBarButton->setMenu(ClassViewMenu);
+    m_classBarButton->setDefaultAction(ActionNerve);
+
+
+
+//    m_classBarButton->addAction(ActionNerve);
+//    m_classBarButton->addAction(ActionLowerCase);
+}
+
+void MainWindow::createClassToolBars()
+{
+//    editToolBar = new QToolBar(this);
+//    editToolBar->setGeometry(700,0,100,50);
+//    editToolBar->addWidget(cameraviewToolButton);
+    drawingToolBar->addWidget(m_classBarButton);
 }

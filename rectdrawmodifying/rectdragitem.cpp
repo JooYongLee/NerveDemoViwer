@@ -8,12 +8,3 @@ BoundBoxItem::BoundBoxItem(QGraphicsItem* parent)
              QGraphicsItem::ItemIsMovable);
 
 }
-//void BoundBoxItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
-//{
-//    QGraphicsRectItem::mouseMoveEvent(event);
-//}
-//QRectF BoundBoxItem::boundingRect() const
-//{
-//    return QRectF(0,0,100,100);
-
-//}

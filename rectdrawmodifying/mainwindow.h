@@ -1,23 +1,28 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <QAction>
+#include <QDockWidget>
+#include <QFileDialog>
 #include <QGraphicsView>
 #include <QGraphicsScene>
-#include <QToolBar>
-#include <QAction>
-#include <QSlider>
-#include <QPushButton>
-#include <QDockWidget>
 #include <QListWidget>
-#include <QTextEdit>
-#include <QStatusBar>
-#include <QFileDialog>
-#include <QStringList>
+#include <QMainWindow>
 #include <QMimeData>
+#include <QSlider>
+#include <QStatusBar>
+#include <QStringList>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QToolBar>
+
+
+#include "boundingbox.h"
+#include "classtoolbarbutton.h"
 #include "filemanager.h"
 #include "scenebox.h"
-#include "boundingbox.h"
+
+
 namespace Ui {
 class MainWindow;
 }
@@ -66,11 +71,15 @@ public:
     void dragEnterEvent(QDragEnterEvent *);
 
     void dropEvent(QDropEvent *);
+
+    void boxListDelete(int ind);
 public slots:
     void actioniGroupClick(QAction *action);
     void buttonclicked();
 
     void boxListUpdate(int id_box, QBoxitem* box);
+    void DeleteBoxList(QUuid*);
+    void updateSelectBox(QBoxitem*);
     void addBoxListToViwer(QBoxitem* box);
 
     void OpenFileDialog();
@@ -78,10 +87,29 @@ public slots:
     void fileListChanged(int);
     void actionBoxSave();
 
+    void triggeredNerve();
+    void triggeredLowercase();
+
 
 
 
 private:
+
+    int     m_nClassId;
+    ClassToolBarButton* m_classBarButton;
+    QMenu   *ClassViewMenu;
+
+    QAction *ActionNerve;
+    QAction *ActionLowerCase;
+
+
+    void createToolBarActions();
+    void createToolBarMenu();
+    void createToolBarButtons();
+    void createClassToolBars();
+
+
+
 
     QString _GetBoxStringFormat(QBoxitem *box);
 
