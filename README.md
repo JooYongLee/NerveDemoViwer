@@ -15,6 +15,7 @@ https://www.walletfox.com/
 Prerequisites
 * DCMTK
 
+main support 
 * image viwer / annotation tools
 * box drawing, editing boxes, move the boxes
 * manage boxes each images
