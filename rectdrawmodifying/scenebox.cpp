@@ -206,7 +206,7 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
 
 
 
-
+//        qDebug()<<__FUNCTION__<<QBoxitem::NERVE<<m_nBoxClass;
         if( !itemBoundingBox && _isInsideImage(origPoint))
         {
             itemBoundingBox = new BoundingBox(nullptr,QBoxitem::BoxClass(m_nBoxClass));
@@ -241,6 +241,7 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
 
 
     }
+
     QGraphicsScene::mousePressEvent(event);
 }
 double calc_distance(QPointF p1, QPointF p2)
@@ -456,6 +457,10 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
         UpdateBoxItems();
 
     }
+
+    QPointF imgPos = _ConvertScenePos2ImgPos(&event->scenePos());
+    qDebug()<<__FUNCTION__<<event->scenePos()<<pixmapitem->scenePos()<<imgPos;
+    emit cursorPos(&imgPos);
 //    QGraphicsScene::mouseMoveEvent(event);
 
 }
@@ -562,6 +567,26 @@ QRectF SceneItems::_ConvertInverseBoundingBox(QBoxitem *box)
                    QPointF(x_max, y_max)
                   );
 }
+QPointF SceneItems::_ConvertScenePos2ImgPos(QPointF *scenPos)
+{
+    QRectF imgRect =  pixmapitem->sceneBoundingRect();
+    qDebug()<<__FUNCTION__<<imgRect;
+    QPointF OriginImg = imgRect.topLeft();
+
+    QSize origin_size = pixmapitem->m_imgSize;
+
+    qreal scale_x = origin_size.width() / imgRect.width();
+    qreal scale_y = origin_size.height() / imgRect.height();
+
+    qreal norm_x_pos = (scenPos->x() - imgRect.left()) * scale_x;
+    qreal norm_y_pos =  (scenPos->y() - imgRect.top()) * scale_y;
+
+    qreal x_pos = qMin( qMax(norm_x_pos, 0.), (qreal)origin_size.width());
+    qreal y_pos = qMin( qMax(norm_y_pos, 0.), (qreal)origin_size.height());
+
+    return QPointF(x_pos, y_pos);
+}
+
 QBoxitem SceneItems::_ConvertBoundingBox(BoundingBox *box)
 {
     QRectF view_domain_rect = box->sceneBoundingRect();
@@ -601,29 +626,36 @@ void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
     m_dragged = false;
     _selectedBoxVertex = NoneVertex;
     QRectF boundaryRect = this->_GetBoundingRectOnImg();
-    qDebug()<<__FUNCTION__;
+
     if( itemBoundingBox )
     {
-        QUuid uid = QUuid::createUuid();
-        QBoxitem boxitems = _ConvertBoundingBox(itemBoundingBox);
-
-        boxitems.setID(uid);
-        itemBoundingBox->setSceneBoundingRect(boundaryRect);
-
-        itemBoundingBox->setData(QVariant::Type::Uuid, uid);
-        itemBoundingBox->setData(QVariant::Type::Int, _GetBoxCountAndIncreaseCount());
-
-        qDebug()<<itemBoundingBox->sceneBoundingRect();
-
-        if( !itemBoundingBox->isVisible() )
+        if( itemBoundingBox->rect().width() == 0 ||\
+                itemBoundingBox->rect().height() == 0)
+        {
+            removeItem(itemBoundingBox);
+            delete itemBoundingBox;
             qDebug()<<__FUNCTION__<<"so tiny!!!!!!!!!!!!!!!!!!!11";
+        }
+        else
+        {
+            qDebug()<<__FUNCTION__<<origPoint<<event->scenePos();
+            qDebug()<<__FUNCTION__<<itemBoundingBox->sceneBoundingRect();
+            qDebug()<<__FUNCTION__<<itemBoundingBox->rect();
+
+            QUuid uid = QUuid::createUuid();
+            QBoxitem boxitems = _ConvertBoundingBox(itemBoundingBox);
+
+            boxitems.setID(uid);
+            itemBoundingBox->setSceneBoundingRect(boundaryRect);
+
+            itemBoundingBox->setData(QVariant::Type::Uuid, uid);
+            itemBoundingBox->setData(QVariant::Type::Int, _GetBoxCountAndIncreaseCount());
+            emit valuechanged(&boxitems);
+        }
 
 
-
-        emit valuechanged(&boxitems);
-
-//        qDebug()<<__FUNCTION__<<itemBoundingBox->data(QVariant::Type::Uuid);
-//        qDebug()<<__FUNCTION__<<itemBoundingBox->data(QVariant::Type::Int);
+        //        qDebug()<<__FUNCTION__<<itemBoundingBox->data(QVariant::Type::Uuid);
+        //        qDebug()<<__FUNCTION__<<itemBoundingBox->data(QVariant::Type::Int);
     }
     itemBoundingBox = 0;
 

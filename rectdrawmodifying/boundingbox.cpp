@@ -7,6 +7,15 @@ public:
     BoxClass();
     ~BoxClass();
 };
+std::map<QBoxitem::BoxClass,QString> map_boxclas;
+
+void QBoxitem::init_map_box()
+{
+    map_boxclas[BACKGROUND] = "barckground";
+    map_boxclas[NERVE] = "nerve";
+    map_boxclas[LOWERCASE] = "lowercase";
+}
+
 void BoundingBox::SetProperty(QRectF scene_rect, QRectF bounding_rect, QUuid uid, int box_id, QBoxitem::BoxClass _id_class)
 {
     this->setSceneBoundingRect(bounding_rect);

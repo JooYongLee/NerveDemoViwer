@@ -1,4 +1,5 @@
 #include "filemanager.h"
+#include <QDebug>
 FileManger::FileManger(QString path)
     :QDir(path)
 {
@@ -20,8 +21,11 @@ void FileManger::ResearchImgList()
                          "*.png"<<\
                          "*.bmp"<<
                          "*.dcm");
-    file_list.swap(QStringList());
+//    file_list.swap(QStringList());
+    qDebug()<<__FUNCTION__<<file_list;
+    file_list.clear();
     file_list = this->entryList();
+    qDebug()<<__FUNCTION__<<file_list;
     UpdateFileList();
 }
 

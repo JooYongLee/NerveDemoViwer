@@ -37,6 +37,7 @@ signals:
     void valuechanged(QBoxitem*);
     void deletedItems(QUuid*);
     void updateItems(QBoxitem*);
+    void cursorPos(QPointF*);
 
 public:
     bool _isInsideImage(QPointF pressedPos);
@@ -64,6 +65,8 @@ private:
     QGraphicsLineItem *GuideLineToHorizonDraw;
     QGraphicsLineItem *GuideLineToVerticalDraw;
     void DrawGuideLine(QPointF center);
+
+    QPointF _ConvertScenePos2ImgPos(QPointF *scenPos);
     QBoxitem _ConvertBoundingBox(BoundingBox *box);
     QRectF _ConvertInverseBoundingBox(QBoxitem *box);
 

@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     boundingbox.cpp \
     imgitem.cpp \
     filemanager.cpp \
-    classtoolbarbutton.cpp
+    classtoolbarbutton.cpp \
+    qjsonbox.cpp
 
 HEADERS  += mainwindow.h \    
     scenebox.h \
@@ -28,7 +29,8 @@ HEADERS  += mainwindow.h \
     defineconfigure.h \
     filemanager.h \
     rectdragitem.h \
-    classtoolbarbutton.h
+    classtoolbarbutton.h \
+    qjsonbox.h
 
 FORMS    += mainwindow.ui
 

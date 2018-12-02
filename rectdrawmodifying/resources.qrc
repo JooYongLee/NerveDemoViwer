@@ -7,5 +7,6 @@
         <file>dnnicon.png</file>
         <file>nerve.png</file>
         <file>toothbone.png</file>
+        <file>loadBox.png</file>
     </qresource>
 </RCC>

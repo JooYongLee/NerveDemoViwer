@@ -15,7 +15,7 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QToolBar>
-
+#include <QLabel>
 
 #include "boundingbox.h"
 #include "classtoolbarbutton.h"
@@ -86,14 +86,26 @@ public slots:
     void fileListClicked(QListWidgetItem*);
     void fileListChanged(int);
     void actionBoxSave();
+    void actionloadBox();
 
     void triggeredNerve();
     void triggeredLowercase();
+    void triggeredLoadBoxes();
+
+
+    void showPosCursor(QPointF *);
+
+    void clickedtoolbutton();
 
 
 
 
 private:
+    // to block drawing image when change row of list number
+    bool m_isFileListDeleting;
+
+    //
+    QLabel *m_CursorTracker;
 
     int     m_nClassId;
     ClassToolBarButton* m_classBarButton;
@@ -120,7 +132,7 @@ private:
     Ui::MainWindow *ui;
 
     void creatToolBar();
-    void createAction();
+    void createToolBarAction();
     void createConnection();
 
 
@@ -130,7 +142,7 @@ private:
     void CreateFileMenuConnection();
 
     void UpdateFileListWidget();
-    void ResetFileMangerAndUpdateFileList(QFileInfo fileinfo);
+    int ResetFileMangerAndUpdateFileList(QFileInfo fileinfo);
 
 
 
@@ -148,6 +160,7 @@ private:
     QAction *selectAction;
     QAction *drawAction;
     QAction *saveAction;
+    QAction *loadBoxAction;
     QAction *dnnAction;
     QActionGroup *actionGroup;
 

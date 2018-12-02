@@ -13,11 +13,10 @@ class QBoxitem
 {
 
 public:
+    // box class
     enum BoxClass { BACKGROUND, NERVE, LOWERCASE };
-//    explicit QBoxitem(QObject *parent ):
-//        QObject(parent)
-//    {}
-//    QBoxitem( QObject *parent = 0) : QObject(parent){}
+
+    static void init_map_box();
 
     QBoxitem(qreal x_min = 0, qreal y_min = 0, qreal width = 0, qreal height= 0)
         : left(x_min),
@@ -26,24 +25,35 @@ public:
           bottom(y_min+height-1),
           id_class(NERVE)
     {
+        box = QRectF(x_min, y_min,width,height);
+        uid_box = QUuid::createUuid();
 //        uid_box = QUuid::createUuid();
 //        qDebug()<<uid_box;
     }
     ~QBoxitem(){}
+
+    // unique id of the box, to used to check between drawing item and item of list
     void setID(QUuid id)            { uid_box = id;}
     QUuid getID() const             { return uid_box;}
 
+    // set the BoxClass
     void setClass(BoxClass id)      { id_class = id;}
     int  getClass()                 { return id_class ;}
+
+    // boxes info
     qreal left ;
     qreal right;
     qreal top;
     qreal bottom;
+    // it is the identical number with list from viewer.
     int   id_class;
+    QRectF box;
 private:
+
     QUuid  uid_box;
 };
 
+extern std::map<QBoxitem::BoxClass,QString> map_boxclas;
 class BoxManager
 {
 public:
