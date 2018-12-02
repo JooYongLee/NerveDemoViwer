@@ -15,6 +15,16 @@ https://www.walletfox.com/
 Prerequisites
 * DCMTK
 
+* image viwer / annotation tools
+* box drawing, editing boxes, move the boxes
+* manage boxes each images
+* manage image from directory
+* writing or loading the result of boxes with json format
+![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/viwer1202.PNG)
+
+
+
+
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/ImgViewer/ImgVeiwer.PNG)
 
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/ImgViewer/ImgVeiwer2.PNG)
@@ -24,7 +34,7 @@ Prerequisites
 
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/annotation_tools.png)
 
-![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/annotation_tool_ver1128.PNG)
+
 
 
 
