@@ -58,34 +58,55 @@ void scale_array( unsigned short *buff, unsigned char *buff8, int length, float 
 
 bool LoadDicom(std::string imgpath, unsigned char *&buff8, int &width, int &height)
 {
-    DicomImage *image = new DicomImage(imgpath.c_str());
+    DcmFileFormat dcmFormat;
+    dcmFormat.loadFile( imgpath.c_str() );
+    DcmDataset *dataSet = dcmFormat.getDataset();
+    E_TransferSyntax transferSyntax = dcmFormat.getDataset()->getOriginalXfer();
+
+
+    double ww, wc;
+
+//        DicomImage *image = new DicomImage(imgpath.c_str());
+//        image->getWindow(wc,ww);
+
+
+    DicomImage *image = new DicomImage(&dcmFormat,
+                    transferSyntax,
+                    CIF_AcrNemaCompatibility,
+                    0,
+                    1);
+
+
+    dataSet->findAndGetFloat64(
+        DCM_WindowCenter,
+        wc);
+
+    dataSet->findAndGetFloat64(
+        DCM_WindowWidth,
+        ww);
+
+    image->setWindow(wc, ww);
+
+    width = image->getWidth();
+    height = image->getHeight();
+
     if (image != NULL)
     {
         if (image->getStatus() == EIS_Normal)
         {
             if (image->isMonochrome())
             {
-                image->setMinMaxWindow();
-                double dmin;
-                double dmax;
+                qDebug()<<__FUNCTION__<<ww<<wc;
 
-                image->getMinMaxValues(dmin,dmax);
-
-                //cout<<"min"<<dmin<<"max"<<dmax<<"size"<<image->getOutputDataSize();
-
-
-                height =  image->getHeight();
-                width = image->getWidth();
-
-                Uint16 *pixelData = (Uint16 *)(image->getOutputData(14/* bits */));
+                uchar *pixelData = (uchar *)(image->getOutputData(8));//4/* bits */));
 //                image->getOutputData(pixelData,);
 
                 if (pixelData != NULL && buff8 == NULL)
                 {
+//                    qDebug()<<__FUNCTION__<<window_width<<window_center;
                     buff8 = new unsigned char[ height * width];
-                    memset(buff8, 0, width * height * sizeof(unsigned char));                    
-                    scale_array(pixelData, buff8, height * width, 255.0f/16383.0f );
-                    /* do something useful with the pixel data */
+                    memcpy(buff8, pixelData, width * height * sizeof(unsigned char));
+
                 }
             }
         }
