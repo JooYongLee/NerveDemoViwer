@@ -25,14 +25,14 @@ inline QRectF ConstrainedRect(QRectF rect1, QRectF rect2)
     qreal bottom  = qMin(rect1.bottom()   ,rect2.bottom());
     return QRectF(QPointF(left,top), QPointF(right,bottom));
 }
-void SceneItems::Redraw(QString path,ImgType typeflag)
+void SceneItems::Redraw(QString path,ViewConfig viewConfig)
 {
     QPixmap img;
     QSize imgSize;
-    if( typeflag == ImgType::DcmImg)
+    if( viewConfig.imgType == ImgType::DcmImg)
     {
         qDebug()<<__FUNCTION__<<"--------------------"<<path<<path.toInt();
-        this->dcmReader.ReadPixmapFromVolume(CORONAL, path.toInt(),img);
+        this->dcmReader.ReadPixmapFromVolume(viewConfig.viewFlag, path.toInt(),img);
     }
     else
     {
@@ -58,13 +58,11 @@ void SceneItems::_DeleteAllBoxItems()
     }
 }
 
-void SceneItems::Redraw(QString path, QList<QBoxitem> boxitems, ImgType typeflag)
+void SceneItems::Redraw(QString path, QList<QBoxitem> boxitems, ViewConfig viewConfig)
 {
-    Redraw(path, typeflag);
+    Redraw(path, viewConfig);
 
-//    this->dcmReader.AllSave();
-
-    _DeleteAllBoxItems();
+    _DeleteAllBoxItems();    
 
     //_ResizeBox();
     for( int ind = 0; ind < boxitems.count(); ind++)
@@ -317,12 +315,11 @@ void SceneItems::_ResizeBox(BoundingBox *box, QPointF dragPoint, RectVerices ver
     if( vertex == TopLeft )
     {
         qDebug()<<"before"<<rect;
-//        views()[0]->setCursor(Qt::CrossCursor);
+
         rect = QRectF( QPointF(dragPoint.x(), dragPoint.y()),
                      QPointF(boxRect.right(), boxRect.bottom()));
 
-//        rect.setWidth(rect.width()+box->pos().x());
-//        rect.setHeight(rect.height()+box->pos().y());
+
         qDebug()<<"after"<<rect;
 
     }

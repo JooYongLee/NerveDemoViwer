@@ -98,20 +98,32 @@ public slots:
 
     void clickedtoolbutton();
 
-
-    void triggerdCameraView();
+    //////////////////////
+    /// \brief camera view
+    ///
+    void triggerdSagittalView();
+    void triggerAxialView();
+    void triggerdCoronalView();
 
 private:
     ImgType m_imgtype;
+    VIEW_FLAG m_viewDcmCamera;
 
     void    _SetImgType(ImgType type)   {   m_imgtype = type;   }
     // to block drawing image when change row of list number
     bool m_isFileListDeleting;
+    /////////////////////////////////
+    /// \brief loadBoxToViwer load boxes from filepath of json format
+    /// \param filepath
+    ///
+    void loadBoxToViwer(QString filepath);
+    void UpdateWorkStateOfCurrentFileList();
+    void UpdateWorkStateOfAllFileList();
 
     //
     QLabel *m_CursorTracker;
 
-    int     m_nClassId;
+    QBoxitem::BoxClass     m_nClassId;
     ClassToolBarButton* m_classBarButton;
     QMenu   *ClassViewMenu;
 
@@ -154,7 +166,7 @@ private:
     void CreateDockWidget();
     void CreateFileMenuConnection();
 
-    void UpdateFileListWidget();
+    void UpdateFileListWidget(bool boxrset = true);
     int ResetFileMangerAndUpdateFileList(QFileInfo fileinfo);
 
 

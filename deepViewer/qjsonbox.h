@@ -36,6 +36,7 @@ public:
 
 
 private:
+
     QList<BoxManager>   BoxesList;
     QStringList         filenameList;
     QString             cameraView;
@@ -47,7 +48,11 @@ class JsonBoxSaver
 public:
     JsonBoxSaver(){}
     ~JsonBoxSaver(){}
-    static void saveJson(BoxFormat boxes);
+
+    static QString GetBasePath();
+    static void InitPath();
+
+    static void saveJson(BoxFormat boxes, QString savename);
     static BoxFormat loadJson(QString box_json_path);
 
 };

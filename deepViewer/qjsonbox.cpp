@@ -1,10 +1,44 @@
 
 #include "qjsonbox.h"
+#include "defineconfigure.h"
+#include <QDir>
+#include <QDateTime>
 
 
-void JsonBoxSaver::saveJson(BoxFormat boxes)
+void JsonBoxSaver::InitPath()
 {
-    qDebug()<<__FUNCTION__;
+    QDir dirCreator;
+    if( dirCreator.mkpath(BASE_PATH_BOXES) == true)
+    {
+
+    }
+    else
+    {
+
+    }
+}
+QString JsonBoxSaver::GetBasePath()
+{
+    QDate date = QDateTime::currentDateTime().date();
+    int year,month,day;
+    date.getDate(&year, &month, &day);
+    QString basename = QString("%1%2%3")
+              .arg(year,4,10)
+              .arg(month,2,10,QChar('0'))
+              .arg(day,2,10,QChar('0'));
+    QString savepath = QDir(BASE_PATH_BOXES).filePath(basename);
+
+    QDir dirCreator;
+    dirCreator.mkpath(savepath);
+
+    qDebug()<<__FUNCTION__<<savepath;
+    return savepath;
+}
+
+void JsonBoxSaver::saveJson(BoxFormat boxes, QString savename)
+{
+    JsonBoxSaver::InitPath();
+
     std::map<QBoxitem::BoxClass,QString> map_boxclas;
 
     QList<BoxManager> boxfilelist=  boxes.GetBoxes();    
@@ -52,9 +86,12 @@ void JsonBoxSaver::saveJson(BoxFormat boxes)
             fulljson<<item;
         }
     }
-    qDebug()<<__FUNCTION__<<"===============";
 
-    QFile saveFile(QStringLiteral("deviceInfo.json"));
+
+    QString abs_save_path = QDir(GetBasePath()).filePath(savename);
+    qDebug()<<__FUNCTION__<<"==============="<<abs_save_path;
+    QFile saveFile(abs_save_path);
+
 
     if(!saveFile.open(QIODevice::WriteOnly)){
         qDebug("Cound not open json file to save");

@@ -1,7 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-
+#include <QMessageBox>
+#include <QTime>
 #include <QDebug>
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
@@ -11,6 +12,7 @@
 #include <QDir>
 #include <QStatusBar>
 #include <QLabel>
+#include <QDateTime>
 #include "filemanager.h"
 #include "qjsonbox.h"
 //void myQView::wheelEvent(QWheelEvent* event)
@@ -140,8 +142,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     m_NumImgInViwer(0),
-    m_nClassId(0),
-    m_isFileListDeleting(false)
+    m_nClassId(QBoxitem::NERVE),
+    m_isFileListDeleting(false),
+    m_viewDcmCamera(VIEW_FLAG::CORONAL)
 {    
     QBoxitem::init_map_box();
     ui->setupUi(this);
@@ -173,21 +176,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_CursorTracker = new QLabel(this);
 
     ui->statusBar->addPermanentWidget(m_CursorTracker);
-
-
-//    QLabel statusLabel(this);
-//    statusLabel.setText("Status Label");
-//    ui->statusBar->addPermanentWidget(&statusLabel);
-//    layout
-
-//    QStatusBar *bar = new QStatusBar(this);
-//    ui->->addWidget(bar);
-//    statusbar->insertPermanentWidget(0,this);
-//    statusbar->addPermanentWidget(this);
-//    addDockWidget(Qt::BottomDockWidgetArea, statusbar);
-
-//    statusbar->setGeometry(0,0,100,100);
-//    ui->statusBar->addPermanentWidget(statusbar);
 
     connect(fileListWidget,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
     connect(fileListWidget,SIGNAL(itemChanged(QListWidgetItem*)),this,SLOT(fileListClicked(QListWidgetItem*)));
@@ -221,8 +209,8 @@ void MainWindow::showPosCursor(QPointF *curpnt)
 {
 //    QLabel *curosrprnt = new QLabel(this);
     m_CursorTracker->setText(QString("%1,%2")
-                   .arg((int)curpnt->x())
-                   .arg((int)curpnt->y()));
+                   .arg((int)curpnt->x(),3,10,QChar('0'))
+                   .arg((int)curpnt->y(),3,10,QChar('0')));
 
 
 }
@@ -243,7 +231,10 @@ void MainWindow::fileListChanged(int file_num)
 
 
         qDebug()<<__FUNCTION__<<full_abs_path;
-        scene->Redraw(full_abs_path, BoxesList.at(file_num).boxmap , m_imgtype);
+
+        scene->Redraw(full_abs_path,
+                      BoxesList.at(file_num).boxmap,
+                      ViewConfig(m_imgtype,m_viewDcmCamera));
         _SetStatusImg(file_num);
         RedrawViwer(file_num);
     }
@@ -271,11 +262,24 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
 
     QFileInfo fileinfo(filelist.first());
-    qDebug()<<__FUNCTION__;
-    int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
-    fileListChanged(fileNum);
-//    fileListWidget->item(fileNum)->setSelected(true);
-    fileListWidget->setCurrentRow(fileNum);
+    QString extension = fileinfo.completeSuffix();
+    if( !extension.compare("json"))
+    {
+        loadBoxToViwer(filelist.first());
+        UpdateWorkStateOfAllFileList();
+    }
+    else
+    {
+        qDebug()<<__FUNCTION__;
+        int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
+        fileListChanged(fileNum);
+    //    fileListWidget->item(fileNum)->setSelected(true);
+        fileListWidget->setCurrentRow(fileNum);
+    }
+
+
+
+
 
 }
 //////////////////////////////////////////////////////
@@ -294,15 +298,7 @@ void MainWindow::RedrawViwer(int id_item)
      for( int ind_key = 0; ind_key < boxitems.count(); ind_key++)
      {
         boxListUpdate(ind_key,(QBoxitem*)&boxitems.at(ind_key));
-
      }
-//    while (iter.hasNext()) {
-//        iter.next();
-//        qDebug()<< iter.key() << ": " << _GetBoxStringFormat((QBoxitem*)&iter.value());
-//        iter.value()
-//        boxListUpdate(iter.key(),(QBoxitem*)&iter.value());
-//    }
-    //if( boxitems.size() == 0)
 }
 void MainWindow::fileListClicked(QListWidgetItem *items)
 {
@@ -314,7 +310,9 @@ void MainWindow::fileListClicked(QListWidgetItem *items)
                 fileManager.GetBasePath() + '/' +   items->text();
 
 
-    scene->Redraw(full_abs_path, BoxesList.at(item_ind).boxmap , m_imgtype);
+    scene->Redraw(full_abs_path,
+                  BoxesList.at(item_ind).boxmap,
+                  ViewConfig(m_imgtype,m_viewDcmCamera));
 
 
     _SetStatusImg(item_ind);
@@ -323,8 +321,11 @@ void MainWindow::fileListClicked(QListWidgetItem *items)
    // boxListUpdate();
     qDebug()<<__FUNCTION__;
 }
-
-void MainWindow::UpdateFileListWidget()
+////////////////////////////////////////
+/// \brief MainWindow::UpdateFileListWidget
+/// \param boxrset : default true
+///
+void MainWindow::UpdateFileListWidget(bool boxrset)
 {
 
 
@@ -342,7 +343,7 @@ void MainWindow::UpdateFileListWidget()
     QStringList imglist;
     if( m_imgtype == ImgType::DcmImg )
     {
-        int list_size = scene->GetSliceSize(CORONAL);
+        int list_size = scene->GetSliceSize(m_viewDcmCamera);
         for(int cnt = 0; cnt < list_size; cnt++)
             imglist<<QString("%1").arg(cnt, 3, 10, QChar('0'));
     }
@@ -360,16 +361,19 @@ void MainWindow::UpdateFileListWidget()
     fileListWidget->addItems(imglist);
     qDebug()<<__FUNCTION__<<"after"<<fileListWidget->count();
     m_isFileListDeleting = false;
-    BoxesList.clear();
-//    BoxesList.reserve(imglist.size());
-//    qDebug()<<"+++++++++"<<BoxesList.size()<<imglist.size();
-    for( int ind = 0; ind < imglist.size(); ind++)
+    if( boxrset )
     {
-        BoxManager imgbox;
-        imgbox.filename = imglist.at(ind);
-        imgbox.id_filename = ind;
-        BoxesList.append(imgbox);
-//        qDebug()<<BoxesList.at(ind).filename<<BoxesList.at(ind).id_filename;
+        BoxesList.clear();
+    //    BoxesList.reserve(imglist.size());
+    //    qDebug()<<"+++++++++"<<BoxesList.size()<<imglist.size();
+        for( int ind = 0; ind < imglist.size(); ind++)
+        {
+            BoxManager imgbox;
+            imgbox.filename = imglist.at(ind);
+            imgbox.id_filename = ind;
+            BoxesList.append(imgbox);
+    //        qDebug()<<BoxesList.at(ind).filename<<BoxesList.at(ind).id_filename;
+        }
     }
 }
 QString MainWindow::_GetBoxStringFormat(QBoxitem *box)
@@ -435,6 +439,10 @@ void MainWindow::DeleteBoxList(QUuid *tobeDeletedItem)
                 break;
             }
         }
+        m_isFileListDeleting = true;
+        UpdateWorkStateOfCurrentFileList();
+        m_isFileListDeleting = false;
+        fileListWidget->setFocus(Qt::NoFocusReason);
     }
 
 }
@@ -449,7 +457,41 @@ void MainWindow::boxListUpdate(int ind, QBoxitem* box)
 {
     boundingBoxList->insertItem(ind, _GetBoxStringFormat(box));
 }
-
+void MainWindow::UpdateWorkStateOfAllFileList()
+{
+    for(int imgCnt = 0; imgCnt < BoxesList.count(); imgCnt++)
+    {
+        if( BoxesList.at(imgCnt).boxmap.count() > 0 )
+        {
+            if( fileListWidget->count() > imgCnt )
+            {
+//                fileListWidget->item(imgCnt)->setCheckState(Qt::Checked);
+                fileListWidget->item(imgCnt)->setBackgroundColor(QColor(46,139,87));
+            }
+            else
+            {
+                fileListWidget->item(imgCnt)->setBackgroundColor(QColor(255,255,255));
+            }
+        }
+    }
+}
+void MainWindow::UpdateWorkStateOfCurrentFileList()
+{
+    if( fileListWidget->count()>0)
+    {
+        qDebug()<<__FUNCTION__;
+        if( BoxesList[_GetStatusImg()].boxmap.count() > 0 )
+        {
+            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(46,139,87));
+        }
+        else
+        {
+            qDebug()<<__FUNCTION__<<"--------------"<<_GetStatusImg()<<fileListWidget->count();
+            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(255,255,255));
+//            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(0,0,255));
+        }
+    }
+}
 void MainWindow::addBoxListToViwer(QBoxitem* box)
 {
     qDebug()<<__FUNCTION__;
@@ -466,8 +508,11 @@ void MainWindow::addBoxListToViwer(QBoxitem* box)
     if( _GetStatusImg() < BoxesList.size())
     {
         qDebug()<<__FUNCTION__<<"add box to viewer"<<box->getID();
-        BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);
+        BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);        
     }
+
+    UpdateWorkStateOfCurrentFileList();
+
     fileListWidget->setFocus(Qt::NoFocusReason);
 }
 
@@ -535,15 +580,8 @@ void MainWindow::createConnection()
 
     connect(loadBoxAction, SIGNAL(triggered(bool)), this, SLOT(actionloadBox()));
 }
-void MainWindow::actionloadBox()
+void MainWindow::loadBoxToViwer(QString filepath)
 {
-
-    QString filepath;
-    filepath = QFileDialog::getOpenFileName(
-                this,
-                tr("Open Image"),
-                QString(),
-                tr("Image Files (*.json)"));
     QFile checkfile(filepath);
 
 
@@ -555,11 +593,10 @@ void MainWindow::actionloadBox()
 
 
     BoxFormat loadboxFormat = JsonBoxSaver::loadJson(filepath);
-  //  qDebug()<<__FUNCTION__<<filepath;
 
     QList<BoxManager> boxFromJson = loadboxFormat.GetBoxes();
 
-//    qDebug()<<__FUNCTION__<<boxFromJson.count()<<BoxesList.count();
+
 
 
     // loading boxes from json if only the counts of box is less than the number of list image
@@ -585,7 +622,20 @@ void MainWindow::actionloadBox()
         }
         fileListChanged(fileListWidget->currentRow());
     }
-    //qDebug()<<__FUNCTION__<<"currentitems"<<fileListWidget->currentRow();
+
+}
+
+void MainWindow::actionloadBox()
+{
+
+    QString filepath;
+    filepath = QFileDialog::getOpenFileName(
+                this,
+                tr("Open Image"),
+                QString(),
+                tr("Image Files (*.json)"));
+
+    loadBoxToViwer(filepath);
 
 }
 
@@ -593,8 +643,60 @@ void MainWindow::actionBoxSave()
 {
     qDebug()<<__FUNCTION__;
     BoxFormat savebox(BoxesList, fileManager.GetImgList(), "coronal");
+    QFileInfo basepathinfo(fileManager.GetBasePath());
 
-    JsonBoxSaver::saveJson(savebox);
+    if( fileManager.GetBasePath().size() > 0 )
+    {
+        auto path = QDir::cleanPath(fileManager.GetBasePath());
+        QStringList result(path);
+        while(!QFileInfo(path).isRoot())
+        {
+            result << (path = QFileInfo(path).path());
+
+        }
+        qDebug()<<result;
+    }
+
+
+
+    QString basename;
+    if( fileManager.GetBasePath().size() > 0)
+    {
+        basename = QFileInfo(fileManager.GetBasePath()).baseName();
+    }
+    else
+    {
+        QTime time = QDateTime::currentDateTime().time();
+        basename = QString("%1%2%3")
+                .arg(time.hour())
+                .arg(time.minute())
+                .arg(time.msec());
+    }
+    basename += ".json";
+    JsonBoxSaver::saveJson(savebox, basename);
+
+
+    QMessageBox msgBox;
+
+    msgBox.setText("The box has been saved");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.exec();
+//    msgBox.setDefaultButton(QMessageBox::Save);
+//    msgBox.show();
+
+
+
+
+
+
+
+
+//    QMessageBox();
+//                QMessageBox::Icon icon,
+//                const QString &title, const QString &text,
+//                        QMessageBox::StandardButtons buttons,
+//                        QWidget *parent = nullptr,
+//                        Qt::WindowFlags f = Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint)
 
 }
 
@@ -664,20 +766,67 @@ void MainWindow::createToolBarActions()
     ActionAxial->setIcon(QIcon(":/icons/axial.png"));
     ActionSagittal->setIcon(QIcon(":/icons/sagittal.png"));
 
-    connect(ActionCoronal   , SIGNAL(triggered()), this, SLOT(triggerdCameraView()));
-    connect(ActionAxial   , SIGNAL(triggered()), this, SLOT(triggerdCameraView()));
-    connect(ActionSagittal   , SIGNAL(triggered()), this, SLOT(triggerdCameraView()));
+    connect(ActionCoronal   , SIGNAL(triggered()), this, SLOT(triggerdCoronalView()));
+    connect(ActionAxial   , SIGNAL(triggered()), this, SLOT(triggerAxialView()));
+    connect(ActionSagittal   , SIGNAL(triggered()), this, SLOT(triggerdSagittalView()));
 }
-void MainWindow::triggerdCameraView()
+void MainWindow::triggerAxialView()
 {
-    qDebug()<<__FUNCTION__;
+    if( m_viewDcmCamera == VIEW_FLAG::AXIAL )
+    {
 
+    }
+    else
+    {
+        m_viewDcmCamera = VIEW_FLAG::AXIAL;
+        if( m_imgtype == ImgType::DcmImg)
+        {
+            UpdateFileListWidget(false);
+            fileListChanged(0);
+            fileListWidget->setCurrentRow(0);
+        }
+    }
+}
+void MainWindow::triggerdSagittalView()
+{
+    if( m_viewDcmCamera == VIEW_FLAG::SAGITTAL )
+    {
+
+    }
+    else
+    {
+        m_viewDcmCamera = VIEW_FLAG::SAGITTAL;
+        if( m_imgtype == ImgType::DcmImg)
+        {
+            UpdateFileListWidget(false);
+            fileListChanged(0);
+            fileListWidget->setCurrentRow(0);
+        }
+    }
+
+}
+void MainWindow::triggerdCoronalView()
+{    
+    if( m_viewDcmCamera == VIEW_FLAG::CORONAL )
+    {
+
+    }
+    else
+    {
+        m_viewDcmCamera = VIEW_FLAG::CORONAL;
+        if( m_imgtype == ImgType::DcmImg)
+        {
+            UpdateFileListWidget(false);
+            fileListChanged(0);
+            fileListWidget->setCurrentRow(0);
+
+            UpdateWorkStateOfAllFileList();
+        }
+    }
 }
 
 void MainWindow::clickedtoolbutton()
 {
-    qDebug()<<__FUNCTION__;
-    qDebug()<<__FUNCTION__;
 
 }
 
@@ -716,9 +865,6 @@ void MainWindow::createToolBarButtons()
 
 void MainWindow::createClassToolBars()
 {
-//    editToolBar = new QToolBar(this);
-//    editToolBar->setGeometry(700,0,100,50);
-//    editToolBar->addWidget(cameraviewToolButton);
     drawingToolBar->addWidget(m_classBarButton);
     drawingToolBar->addWidget(CameraViewButton);
 }

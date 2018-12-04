@@ -24,13 +24,13 @@ public :
     void setMode(Mode mode);
 
     ImgItem *pixmapitem;
-    void Redraw(QString path,ImgType typeflag);
-    void Redraw(QString path,  QList<QBoxitem> boxitems, ImgType typeflag );
+    void Redraw(QString path,ViewConfig viewConfig);
+    void Redraw(QString path,  QList<QBoxitem> boxitems, ViewConfig viewConfig );
     void ComputeBoxInImg();
     void wheelEvent(QWheelEvent* event);
     void createGuideLine();
     void UpdateBoxItems();
-
+    // load box in image of the viwer
     void changeBoxClass(QBoxitem::BoxClass id_class)      { m_nBoxClass = id_class;}
 
     bool LoadDcmVolume(QStringList imglist, QString basepath);
