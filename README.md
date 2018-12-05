@@ -21,6 +21,9 @@ main support
 * manage boxes each images
 * manage image from directory
 * writing or loading the result of boxes with json format
+
+![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/viwer1206.PNG)
+
 ![MyImage](https://github.com/JooYongLee/NerveDemoViwer/blob/master/Image/viwer1202.PNG)
 
 
