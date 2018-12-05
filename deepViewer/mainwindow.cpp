@@ -262,25 +262,35 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
 
     QFileInfo fileinfo(filelist.first());
-    QString extension = fileinfo.completeSuffix();
-    if( !extension.compare("json"))
+
+    QDir jsonExplore(fileinfo.path());
+
+    jsonExplore.setNameFilters(QStringList()<<"*.json");
+    QStringList jsonList = jsonExplore.entryList();
+    if( jsonList.count()>0 &&
+        JsonBoxSaver::CheckMultipleJsonBox(jsonList) == true )
     {
-        loadBoxToViwer(filelist.first());
+        qDebug()<<__FUNCTION__<<"CheckMultipleJsonBox";
+        loadMultipleFileBoxToViwer(jsonList, fileinfo.path());
         UpdateWorkStateOfAllFileList();
     }
     else
     {
-        qDebug()<<__FUNCTION__;
-        int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
-        fileListChanged(fileNum);
-    //    fileListWidget->item(fileNum)->setSelected(true);
-        fileListWidget->setCurrentRow(fileNum);
+        qDebug()<<__FUNCTION__<<"================";
+        QString extension = fileinfo.completeSuffix();
+        if( !extension.compare("json"))
+        {
+            loadBoxToViwer(filelist.first());
+            UpdateWorkStateOfAllFileList();
+        }
+        else
+        {
+
+            int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
+            fileListChanged(fileNum);
+            fileListWidget->setCurrentRow(fileNum);
+        }
     }
-
-
-
-
-
 }
 //////////////////////////////////////////////////////
 /// \brief MainWindow::RedrawViwer bounding box update when change image from viwer
@@ -302,24 +312,24 @@ void MainWindow::RedrawViwer(int id_item)
 }
 void MainWindow::fileListClicked(QListWidgetItem *items)
 {
-    int item_ind = items->listWidget()->row(items);
+    if( m_isFileListDeleting == false )
+    {
+        int item_ind = items->listWidget()->row(items);
 
 
-    QString full_abs_path = m_imgtype == ImgType::DcmImg ?
-                items->text():
-                fileManager.GetBasePath() + '/' +   items->text();
+        QString full_abs_path = m_imgtype == ImgType::DcmImg ?
+                    items->text():
+                    fileManager.GetBasePath() + '/' +   items->text();
 
 
-    scene->Redraw(full_abs_path,
-                  BoxesList.at(item_ind).boxmap,
-                  ViewConfig(m_imgtype,m_viewDcmCamera));
+        scene->Redraw(full_abs_path,
+                      BoxesList.at(item_ind).boxmap,
+                      ViewConfig(m_imgtype,m_viewDcmCamera));
 
 
-    _SetStatusImg(item_ind);
-    RedrawViwer(item_ind);
-
-   // boxListUpdate();
-    qDebug()<<__FUNCTION__;
+        _SetStatusImg(item_ind);
+        RedrawViwer(item_ind);
+    }
 }
 ////////////////////////////////////////
 /// \brief MainWindow::UpdateFileListWidget
@@ -580,6 +590,49 @@ void MainWindow::createConnection()
 
     connect(loadBoxAction, SIGNAL(triggered(bool)), this, SLOT(actionloadBox()));
 }
+
+void MainWindow::loadMultipleFileBoxToViwer(QStringList filepath, QString basepath)
+{
+    QStringList fullabspath;
+    foreach (QString filename, filepath) {
+        fullabspath.append(basepath+'/'+filename);
+    }
+    BoxFormat loadboxFormat = JsonBoxSaver::loadJsonFromFiles(fullabspath);
+
+    QList<BoxManager> boxFromJson = loadboxFormat.GetBoxes();
+
+    qDebug()<<__FUNCTION__<<"loanding---------->"<<boxFromJson.count();
+
+
+    // loading boxes from json if only the counts of box is less than the number of list image
+    if( boxFromJson.count() > 0 )
+    {
+        for( int k = 0 ; k < boxFromJson.count(); k++)
+        {
+            // check loaded filename, with file list widget
+            // if the filename is same with file list
+            QString item_filename = boxFromJson.at(k).filename;
+//            qDebug()<<item_filename;
+            for( int cnt = 0; cnt < fileListWidget->count(); cnt++)
+            {
+                QString check_filename = fileListWidget->item(cnt)->text();
+                QString check_basename = QFileInfo(check_filename).completeBaseName();
+                if( !item_filename.compare(check_basename) && cnt < BoxesList.count())
+                {
+                    // when file name from json is in accordance with the filename of the list widget
+                    // load box info
+
+                    BoxesList[cnt].boxmap.swap(boxFromJson[k].boxmap);
+                    BoxesList[cnt].filename = check_filename;
+                    qDebug()<<__FUNCTION__<<"loading complte"<<item_filename;
+                    break;
+                }
+            }
+        }
+        fileListChanged(fileListWidget->currentRow());
+    }
+}
+
 void MainWindow::loadBoxToViwer(QString filepath)
 {
     QFile checkfile(filepath);
@@ -622,7 +675,6 @@ void MainWindow::loadBoxToViwer(QString filepath)
         }
         fileListChanged(fileListWidget->currentRow());
     }
-
 }
 
 void MainWindow::actionloadBox()
@@ -634,6 +686,11 @@ void MainWindow::actionloadBox()
                 tr("Open Image"),
                 QString(),
                 tr("Image Files (*.json)"));
+
+    QDir jsonExplore(filepath);
+
+    jsonExplore.setNameFilters(QStringList()<<"*.json");
+    qDebug()<<__FUNCTION__<<jsonExplore.entryList();
 
     loadBoxToViwer(filepath);
 

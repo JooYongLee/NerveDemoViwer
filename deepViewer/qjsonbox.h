@@ -54,6 +54,9 @@ public:
 
     static void saveJson(BoxFormat boxes, QString savename);
     static BoxFormat loadJson(QString box_json_path);
+    static BoxFormat loadJsonFromFiles(QStringList box_json_path );
+    static BoxManager loadJsonFrom(QString box_json_path );
+    static bool CheckMultipleJsonBox(QStringList jsonList);
 
 };
 

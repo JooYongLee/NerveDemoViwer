@@ -112,9 +112,12 @@ private:
     void    _SetImgType(ImgType type)   {   m_imgtype = type;   }
     // to block drawing image when change row of list number
     bool m_isFileListDeleting;
+
+    void loadMultipleFileBoxToViwer(QStringList filepath, QString basepath);
     /////////////////////////////////
     /// \brief loadBoxToViwer load boxes from filepath of json format
     /// \param filepath
+    ///
     ///
     void loadBoxToViwer(QString filepath);
     void UpdateWorkStateOfCurrentFileList();

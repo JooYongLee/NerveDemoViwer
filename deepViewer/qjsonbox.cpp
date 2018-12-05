@@ -102,6 +102,99 @@ void JsonBoxSaver::saveJson(BoxFormat boxes, QString savename)
     QJsonDocument saveDoc(fulljson);
     saveFile.write(saveDoc.toJson());
 }
+BoxFormat JsonBoxSaver::loadJsonFromFiles(QStringList box_json_path )
+{
+    BoxFormat boxes;
+    QList<BoxManager> boxesinfo;
+    for(int cnt = 0; cnt < box_json_path.count(); cnt++)
+    {
+        QString path = box_json_path.at(cnt);
+        path.toInt();
+        BoxManager loadbox = JsonBoxSaver::loadJsonFrom(path);
+        boxesinfo.append(loadbox);
+    }
+    boxes.AddBoxes(boxesinfo);
+    return boxes;
+}
+BoxManager JsonBoxSaver::loadJsonFrom(QString box_json_path )
+{
+    QFile jsonFile(box_json_path);
+
+    BoxManager boxes;
+    if( !jsonFile.open(QFile::ReadOnly) )
+    {
+//        qDebug()<<__FUNCTION__<<"Cound not open json file"<<box_json_path;
+        return boxes;
+    }
+
+    //
+    boxes.filename = QFileInfo(box_json_path).completeBaseName();
+    qDebug()<<__FUNCTION__<<QFileInfo(box_json_path).completeBaseName()<<box_json_path;
+
+    QJsonDocument loadDoc = QJsonDocument().fromJson(jsonFile.readAll());
+    if( loadDoc.isObject())
+    {
+//        qDebug()<<__FUNCTION__<<"json array";
+        QJsonObject boxes_a_filse = loadDoc.object();
+
+        QStringList keylist = boxes_a_filse.keys();
+
+
+        foreach (QString key, keylist) {
+            QJsonArray boxarray;
+
+            if( !key.compare("nerve"))
+            {
+
+                if( boxes_a_filse[key].isArray() )
+                {
+                    boxarray = boxes_a_filse[key].toArray();
+//                    qDebug()<<"nerve"<<boxes_a_filse[key].toArray();
+                }
+            }
+            else if (!key.compare("lowercase"))
+            {
+                if( boxes_a_filse[key].isArray() )
+                {
+                    boxarray = boxes_a_filse[key].toArray();
+//                    qDebug()<<"lowercase"<<boxes_a_filse[key].toArray();
+                }
+            }
+            else
+            {
+
+            }
+
+
+            if( !boxarray.isEmpty())
+            {
+                foreach( QJsonValue box, boxarray)
+                {
+                    QBoxitem boxitem;
+                    QJsonArray aBox = box.toArray();
+                    if( aBox.count() == 4 )
+                    {
+                        boxitem.left    = aBox.at(0).toDouble();
+                        boxitem.top     = aBox.at(1).toDouble();
+                        boxitem.right   = aBox.at(2).toDouble();
+                        boxitem.bottom  = aBox.at(3).toDouble();
+                        //                        boxes.boxmap.append(boxitem);
+
+                        if( !key.compare("nerve"))       boxitem.setClass(QBoxitem::NERVE);
+                        else if( !key.compare("lowercase")) boxitem.setClass(QBoxitem::LOWERCASE);
+
+                        boxes.boxmap.append(boxitem);
+                    }
+                }
+            }
+        }
+
+
+//        qDebug()<<__FUNCTION__<<"loading boxes---------------->"<<boxes.boxmap.count();
+    }
+
+    return boxes;
+}
 
 BoxFormat JsonBoxSaver::loadJson(QString box_json_path )
 {
@@ -211,8 +304,18 @@ BoxFormat JsonBoxSaver::loadJson(QString box_json_path )
     boxes.AddBoxes(boxesinfo);
     return boxes;
 }
-
-
+bool JsonBoxSaver::CheckMultipleJsonBox(QStringList jsonList)
+{
+    foreach (QString filename, jsonList)
+    {
+        QString filebasename = QFileInfo(filename).completeBaseName();
+        bool check;
+        int file2int = filebasename.toInt(&check);
+        if( check == false || file2int < 0 )
+            return false;
+    }
+    return true;
+}
 /////////////////////////////////////////////////
 
 
@@ -237,3 +340,6 @@ void BoxFormat::Release()
     filenameList.clear();
     cameraView.clear();
 }
+
+
+
