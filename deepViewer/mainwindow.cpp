@@ -269,7 +269,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     QStringList jsonList = jsonExplore.entryList();
     if( jsonList.count()>0 &&
         JsonBoxSaver::CheckMultipleJsonBox(jsonList) == true )
-    {
+    {        
         qDebug()<<__FUNCTION__<<"CheckMultipleJsonBox";
         loadMultipleFileBoxToViwer(jsonList, fileinfo.path());
         UpdateWorkStateOfAllFileList();
@@ -285,7 +285,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         }
         else
         {
-
+            actionBoxSave();
             int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
             fileListChanged(fileNum);
             fileListWidget->setCurrentRow(fileNum);
@@ -720,6 +720,19 @@ void MainWindow::actionBoxSave()
     if( fileManager.GetBasePath().size() > 0)
     {
         basename = QFileInfo(fileManager.GetBasePath()).baseName();
+
+        qDebug()<<__FUNCTION__<<basename;
+        qDebug()<<QFileInfo(fileManager.GetBasePath()).path();
+//        while(!QFileInfo(path).isRoot())
+//        {
+//            result << (path = QFileInfo(path).path());
+
+//        }
+        if(basename == "nerve_jpg")
+        {
+
+            basename = QFileInfo(QFileInfo(fileManager.GetBasePath()).path()).baseName();
+        }
     }
     else
     {
@@ -733,28 +746,12 @@ void MainWindow::actionBoxSave()
     JsonBoxSaver::saveJson(savebox, basename);
 
 
-    QMessageBox msgBox;
+//    QMessageBox msgBox;
 
-    msgBox.setText("The box has been saved");
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.exec();
+//    msgBox.setText("The box has been saved");
+//    msgBox.setStandardButtons(QMessageBox::Ok);
+//    msgBox.exec();
 //    msgBox.setDefaultButton(QMessageBox::Save);
-//    msgBox.show();
-
-
-
-
-
-
-
-
-//    QMessageBox();
-//                QMessageBox::Icon icon,
-//                const QString &title, const QString &text,
-//                        QMessageBox::StandardButtons buttons,
-//                        QWidget *parent = nullptr,
-//                        Qt::WindowFlags f = Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint)
-
 }
 
 void MainWindow::creatToolBar()
@@ -774,6 +771,21 @@ void MainWindow::creatToolBar()
 }
 
 
+void MainWindow::triggerChangeActionClass()
+{
+    qDebug()<<__FUNCTION__;
+    if( m_nClassId == QBoxitem::NERVE )
+    {
+
+        m_classBarButton->setDefaultAction(ActionLowerCase);
+        triggeredLowercase();
+    }
+    else
+    {
+        m_classBarButton->setDefaultAction(ActionNerve);
+        triggeredNerve();
+    }
+}
 
 void MainWindow::triggeredNerve()
 {
@@ -795,8 +807,13 @@ void MainWindow::triggeredLoadBoxes()
 
 void MainWindow::createToolBarActions()
 {
+    ChangeActionClass =  new QAction("Change",this);
+    ChangeActionClass->setShortcut(QKeySequence(Qt::Key_C));
+
     ActionNerve   =   new QAction("Nerve",this);
     ActionNerve->setData(QBoxitem::NERVE);
+
+//    ActionNerve->setShortcut(QKeySequence(Qt::Key_C));
 
 
     ActionLowerCase  =   new QAction("Lowercase",this);
@@ -808,6 +825,7 @@ void MainWindow::createToolBarActions()
 
 
 
+    connect(ChangeActionClass   , SIGNAL(triggered()), this, SLOT(triggerChangeActionClass()));
     connect(ActionNerve   , SIGNAL(triggered()), this, SLOT(triggeredNerve()));
     connect(ActionLowerCase  , SIGNAL(triggered()), this, SLOT(triggeredLowercase()));
 
@@ -893,11 +911,15 @@ void MainWindow::createToolBarMenu()
     ClassViewMenu->addAction(ActionNerve);
     ClassViewMenu->addAction(ActionLowerCase);
 
+    this->addAction(ChangeActionClass);
+
 
     CameraViewMenu = new QMenu;
     CameraViewMenu->addAction(ActionCoronal);
     CameraViewMenu->addAction(ActionAxial);
     CameraViewMenu->addAction(ActionSagittal);
+
+
 }
 
 void MainWindow::createToolBarButtons()

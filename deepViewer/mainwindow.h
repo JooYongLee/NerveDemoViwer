@@ -92,6 +92,7 @@ public slots:
     void triggeredNerve();
     void triggeredLowercase();
     void triggeredLoadBoxes();
+    void triggerChangeActionClass();
 
 
     void showPosCursor(QPointF *);
@@ -129,7 +130,7 @@ private:
     QBoxitem::BoxClass     m_nClassId;
     ClassToolBarButton* m_classBarButton;
     QMenu   *ClassViewMenu;
-
+    QAction *ChangeActionClass;
     QAction *ActionNerve;
     QAction *ActionLowerCase;
 
