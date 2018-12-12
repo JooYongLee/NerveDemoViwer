@@ -1,6 +1,7 @@
 #ifndef DEFINECONFIGURE_H
 #define DEFINECONFIGURE_H
 
+#define ANNOTATION_DIR      "anno"
 #define IMG_WIDTH 1000
 #define IMG_HEIGHT 900
 

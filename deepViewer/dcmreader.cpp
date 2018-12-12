@@ -92,12 +92,23 @@ bool dcmFileReader::LoadDicom(QString imgpath, unsigned char *&buff8, int &width
     }
     //    DVPresentationState pstate; // presentation state handler
     //    DcmDataset *dataSet = infile.getDataset();
+//    E_TransferSyntax transferSyntax = infile.getDataset()->getCurrentXfer();
     E_TransferSyntax transferSyntax = infile.getDataset()->getOriginalXfer();
+
     DicomImage *dcmimage = new DicomImage(&infile,
                                        transferSyntax,
-                                       CIF_AcrNemaCompatibility,
-                                       0,
-                                       1);
+                                       CIF_AcrNemaCompatibility);
+
+//    DcmDataset *dataSet = dcmFormat.getDataset();
+
+//	E_TransferSyntax transferSyntax = dcmFormat.getDataset()->getOriginalXfer();
+
+//	pDcmImg = new DicomImage(
+//		&dcmFormat,
+//		transferSyntax,
+//		CIF_AcrNemaCompatibility,
+//		0,
+//		1);
     static int cnt = 0;
     if (dcmimage != NULL)
     {
@@ -116,30 +127,68 @@ bool dcmFileReader::LoadDicom(QString imgpath, unsigned char *&buff8, int &width
                         DCM_WindowWidth,
                         window_width);
 
+            double volume_width = 0;
+            double volume_height = 0;
+            double volume_depth = 0;
+            dataSet->findAndGetFloat64(
+                        DCM_ImagedVolumeWidth,
+                        volume_width);
+            dataSet->findAndGetFloat64(
+                        DCM_ImagedVolumeHeight,
+                        volume_height);
+            dataSet->findAndGetFloat64(
+                        DCM_ImagedVolumeDepth,
+                        volume_depth);
+
+
+//            dcmimage->getOutputPlane()
             dcmimage->setWindow(window_center, window_width);
 
-            height =  dcmimage->getHeight();
-            width = dcmimage->getWidth();
+            width =  dcmimage->getWidth();
+            height = dcmimage->getHeight();
+//            dcmimage->getDepth()
 
-            qDebug()<<__FUNCTION__<<window_center<<"x"<<window_width;
-
-
-            uchar *pixelData = (uchar *)(dcmimage->getOutputData(8));
-//#define TEST_DEBUG
-//#ifdef TEST_DEBUG
-//            QImage testsave(width,height,QImage::Format_Grayscale8);
-//            unsigned char *pImg = testsave.bits();
-//            memcpy(pImg, pixelData, sizeof(uchar)*width*height);
-//            testsave.save(QString("%1.png").arg(cnt++));
-//#endif
+            qDebug()<<__FUNCTION__<<volume_width<<volume_height<<volume_depth;
 
 
+//            qDebug()<<__FUNCTION__<<window_center<<"x"<<window_width;
+
+
+
+//            qDebug()<<__FUNCTION__<<height<<width<<size;
+//            result.resize(size);
+            if( dcmimage->isMonochrome())
+            {
+                qDebug()<<__FUNCTION__<<"monochrome";
+            }
+            else
+            {
+                qDebug()<<__FUNCTION__<<"not monochrome";
+            }
+
+//            return statusToCondition(image_->getOutputData(&result[0], size, bits, frame));
+//createWindowsDIB
+
+//            if(pDicomDibits)
+//                delete pDicomDibits;
+
+            unsigned char *pixelData = (unsigned char *)(dcmimage->getOutputData(8));
+//            unsigned short *pixelData = (unsigned short *)(dcmimage->getOutputData(8));
             if (pixelData != NULL && buff8 == NULL)
             {
                 buff8 = new unsigned char[ height * width];
-                //                    memset(buff8, 0, width * height * sizeof(unsigned char));
+//                for(int k = 0;k<width*height;k++)
+//                    buff8[k] = pixelData[k]/255;
+
                 memcpy(buff8, pixelData, width*height*sizeof(unsigned char));
             }
+//            QImage tmp(width,height,QImage::Format_Grayscale8);
+//            unsigned char *pImg = tmp.bits();
+//            memcpy(pImg,buff8,sizeof(unsigned char)*width*height);
+//            tmp.save(QString("%1.png").arg(cnt++));
+
+
+//            img.fromData()
 
         }
         else

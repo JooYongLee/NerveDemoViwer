@@ -98,20 +98,23 @@ int MainWindow::ResetFileMangerAndUpdateFileList(QFileInfo fileinfo)
     QString extension = fileinfo.completeSuffix();
     if( !extension.compare("dcm") )
     {
+        qDebug()<<__FUNCTION__<<"dicom image";
         _SetImgType(ImgType::DcmImg);
     }
     else
     {
+        qDebug()<<__FUNCTION__<<"norm image";
         _SetImgType(ImgType::NormImg);
     }
-    qDebug()<<__FUNCTION__<<m_imgtype;
+
 
     fileManager.setPath(fileinfo.path());
 //    qDebug()<<fileManager.path();
     fileManager.ResearchImgList();
 
     QStringList imgList  = fileManager.GetImgList();
-    scene->LoadDcmVolume(imgList, fileManager.GetBasePath());
+    if( m_imgtype == ImgType::DcmImg )
+        scene->LoadDcmVolume(imgList, fileManager.GetBasePath());
 
     UpdateFileListWidget();
 
@@ -251,6 +254,32 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
     }
 }
 
+
+bool MainWindow::LoadMultipleJsonFiles(QString filepath)
+{
+//    QFileInfo fileinfo(filepath);
+
+    QDir jsonExplore(filepath);
+
+    jsonExplore.setNameFilters(QStringList()<<"*.json");
+    QStringList jsonList = jsonExplore.entryList();
+    if( jsonList.count()>0 &&
+        JsonBoxSaver::CheckMultipleJsonBox(jsonList) == true )
+    {
+        m_isFileListDeleting = true;
+        qDebug()<<__FUNCTION__<<"CheckMultipleJsonBox";
+        loadMultipleFileBoxToViwer(jsonList, filepath);
+        UpdateWorkStateOfAllFileList();
+        m_isFileListDeleting = false;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
 void MainWindow::dropEvent(QDropEvent *event)
 {
 
@@ -263,21 +292,16 @@ void MainWindow::dropEvent(QDropEvent *event)
 
     QFileInfo fileinfo(filelist.first());
 
-    QDir jsonExplore(fileinfo.path());
 
-    jsonExplore.setNameFilters(QStringList()<<"*.json");
-    QStringList jsonList = jsonExplore.entryList();
-    if( jsonList.count()>0 &&
-        JsonBoxSaver::CheckMultipleJsonBox(jsonList) == true )
-    {        
-        qDebug()<<__FUNCTION__<<"CheckMultipleJsonBox";
-        loadMultipleFileBoxToViwer(jsonList, fileinfo.path());
-        UpdateWorkStateOfAllFileList();
+    if(LoadMultipleJsonFiles(fileinfo.path()))
+    {
+
     }
     else
     {
         qDebug()<<__FUNCTION__<<"================";
         QString extension = fileinfo.completeSuffix();
+        qDebug()<<__FUNCTION__<<"========2=======";
         if( !extension.compare("json"))
         {
             loadBoxToViwer(filelist.first());
@@ -285,10 +309,26 @@ void MainWindow::dropEvent(QDropEvent *event)
         }
         else
         {
+            qDebug()<<__FUNCTION__<<"========3=======";
             actionBoxSave();
             int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
             fileListChanged(fileNum);
             fileListWidget->setCurrentRow(fileNum);
+
+            QString parentDirectory = QFileInfo(fileinfo.path()).path();
+            QString check_annotation_dir = parentDirectory + "/" + ANNOTATION_DIR;
+            if( QDir(check_annotation_dir).exists())
+            {
+                LoadMultipleJsonFiles(check_annotation_dir);
+//                LoadMultipleJsonFiles()
+                qDebug()<<__FUNCTION__<<"anno exists!!";
+            }
+            else
+            {
+                qDebug()<<__FUNCTION__<<"anno not!! exists!!";
+            }
+//
+
         }
     }
 }
@@ -339,7 +379,7 @@ void MainWindow::UpdateFileListWidget(bool boxrset)
 {
 
 
-    qDebug()<<__FUNCTION__<<"before"<<fileListWidget->count();
+//    qDebug()<<__FUNCTION__<<"before"<<fileListWidget->count();
     m_isFileListDeleting = true;
     while(fileListWidget->count()>0)
     {
@@ -744,6 +784,22 @@ void MainWindow::actionBoxSave()
     }
     basename += ".json";
     JsonBoxSaver::saveJson(savebox, basename);
+
+    // save multiple josn files
+    if( fileManager.GetBasePath().size() > 0)
+    {
+        QFileInfo pathinfo(fileManager.GetBasePath());
+        QString save_dir = pathinfo.path()+"/"+"anno";
+
+        QDir dirCreator;
+        dirCreator.mkpath(save_dir);
+        JsonBoxSaver::saveJsons(savebox, save_dir);
+
+    }
+
+
+
+
 
 
 //    QMessageBox msgBox;

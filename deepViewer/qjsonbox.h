@@ -52,6 +52,9 @@ public:
     static QString GetBasePath();
     static void InitPath();
 
+    static QJsonArray createJsonObj(BoxFormat boxes);
+    static void saveJsons(BoxFormat boxes, QString saveDir);
+
     static void saveJson(BoxFormat boxes, QString savename);
     static BoxFormat loadJson(QString box_json_path);
     static BoxFormat loadJsonFromFiles(QStringList box_json_path );

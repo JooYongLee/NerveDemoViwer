@@ -35,13 +35,13 @@ QString JsonBoxSaver::GetBasePath()
     return savepath;
 }
 
-void JsonBoxSaver::saveJson(BoxFormat boxes, QString savename)
+QJsonArray JsonBoxSaver::createJsonObj(BoxFormat boxes)
 {
     JsonBoxSaver::InitPath();
 
     std::map<QBoxitem::BoxClass,QString> map_boxclas;
 
-    QList<BoxManager> boxfilelist=  boxes.GetBoxes();    
+    QList<BoxManager> boxfilelist=  boxes.GetBoxes();
     QJsonArray fulljson;
 
     for(int k = 0; k < boxfilelist.size(); k ++)
@@ -86,7 +86,53 @@ void JsonBoxSaver::saveJson(BoxFormat boxes, QString savename)
             fulljson<<item;
         }
     }
+    return fulljson;
 
+}
+void JsonBoxSaver::saveJsons(BoxFormat boxes, QString saveDir)
+{
+    QJsonArray fulljson = JsonBoxSaver::createJsonObj(boxes);
+//    foreach( QJsonValue box, boxarray)
+    foreach (QJsonValue item, fulljson) {
+        if( item.isObject())
+        {
+            QJsonObject itemObj = item.toObject();
+
+            QStringList keylist = itemObj.keys();
+
+            QString filename;
+            foreach (QString key, keylist) {
+                if( !key.compare("filename"))
+                {
+                    filename = key;
+                    break;
+                }
+            }
+            if( !filename.isEmpty())
+            {
+                QString filename = QFileInfo(itemObj["filename"].toString())
+                                    .completeBaseName();
+
+                QString abs_save_path = saveDir + '/' +  filename + ".json";
+                QFile saveFile(abs_save_path);
+                if(!saveFile.open(QIODevice::WriteOnly))
+                {
+                    continue;
+                }
+
+                QJsonDocument saveDoc(itemObj);
+                saveFile.write(saveDoc.toJson());
+            }
+
+        }
+
+    }
+}
+
+void JsonBoxSaver::saveJson(BoxFormat boxes, QString savename)
+{
+
+    QJsonArray fulljson = JsonBoxSaver::createJsonObj(boxes);
 
     QString abs_save_path = QDir(GetBasePath()).filePath(savename);
     qDebug()<<__FUNCTION__<<"==============="<<abs_save_path;

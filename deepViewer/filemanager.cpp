@@ -22,10 +22,10 @@ void FileManger::ResearchImgList()
                          "*.bmp"<<
                          "*.dcm");
 //    file_list.swap(QStringList());
-    qDebug()<<__FUNCTION__<<file_list;
+//    qDebug()<<__FUNCTION__<<file_list;
     file_list.clear();
     file_list = this->entryList();
-    qDebug()<<__FUNCTION__<<file_list;
+//    qDebug()<<__FUNCTION__<<file_list;
     UpdateFileList();
 }
 
