@@ -82,33 +82,20 @@ using namespace std;
 
 bool dcmFileReader::LoadDicom(QString imgpath, unsigned char *&buff8, int &width, int &height)
 {
-//    DicomImage *image = new DicomImage(imgpath.c_str());
-
     DcmFileFormat infile;
 
     if (!infile.loadFile(imgpath.toStdString().c_str()).good())
     {
         return false;
     }
-    //    DVPresentationState pstate; // presentation state handler
-    //    DcmDataset *dataSet = infile.getDataset();
-//    E_TransferSyntax transferSyntax = infile.getDataset()->getCurrentXfer();
+
     E_TransferSyntax transferSyntax = infile.getDataset()->getOriginalXfer();
 
     DicomImage *dcmimage = new DicomImage(&infile,
                                        transferSyntax,
                                        CIF_AcrNemaCompatibility);
 
-//    DcmDataset *dataSet = dcmFormat.getDataset();
 
-//	E_TransferSyntax transferSyntax = dcmFormat.getDataset()->getOriginalXfer();
-
-//	pDcmImg = new DicomImage(
-//		&dcmFormat,
-//		transferSyntax,
-//		CIF_AcrNemaCompatibility,
-//		0,
-//		1);
     static int cnt = 0;
     if (dcmimage != NULL)
     {
@@ -127,69 +114,20 @@ bool dcmFileReader::LoadDicom(QString imgpath, unsigned char *&buff8, int &width
                         DCM_WindowWidth,
                         window_width);
 
-            double volume_width = 0;
-            double volume_height = 0;
-            double volume_depth = 0;
-            dataSet->findAndGetFloat64(
-                        DCM_ImagedVolumeWidth,
-                        volume_width);
-            dataSet->findAndGetFloat64(
-                        DCM_ImagedVolumeHeight,
-                        volume_height);
-            dataSet->findAndGetFloat64(
-                        DCM_ImagedVolumeDepth,
-                        volume_depth);
-
-
-//            dcmimage->getOutputPlane()
             dcmimage->setWindow(window_center, window_width);
 
             width =  dcmimage->getWidth();
             height = dcmimage->getHeight();
-//            dcmimage->getDepth()
-
-            qDebug()<<__FUNCTION__<<volume_width<<volume_height<<volume_depth;
-
-
-//            qDebug()<<__FUNCTION__<<window_center<<"x"<<window_width;
-
-
-
-//            qDebug()<<__FUNCTION__<<height<<width<<size;
-//            result.resize(size);
-            if( dcmimage->isMonochrome())
-            {
-                qDebug()<<__FUNCTION__<<"monochrome";
-            }
-            else
-            {
-                qDebug()<<__FUNCTION__<<"not monochrome";
-            }
-
-//            return statusToCondition(image_->getOutputData(&result[0], size, bits, frame));
-//createWindowsDIB
-
-//            if(pDicomDibits)
-//                delete pDicomDibits;
 
             unsigned char *pixelData = (unsigned char *)(dcmimage->getOutputData(8));
-//            unsigned short *pixelData = (unsigned short *)(dcmimage->getOutputData(8));
+
+
             if (pixelData != NULL && buff8 == NULL)
             {
                 buff8 = new unsigned char[ height * width];
-//                for(int k = 0;k<width*height;k++)
-//                    buff8[k] = pixelData[k]/255;
 
                 memcpy(buff8, pixelData, width*height*sizeof(unsigned char));
             }
-//            QImage tmp(width,height,QImage::Format_Grayscale8);
-//            unsigned char *pImg = tmp.bits();
-//            memcpy(pImg,buff8,sizeof(unsigned char)*width*height);
-//            tmp.save(QString("%1.png").arg(cnt++));
-
-
-//            img.fromData()
-
         }
         else
         {
@@ -205,18 +143,7 @@ bool dcmFileReader::LoadDicom(QString imgpath, unsigned char *&buff8, int &width
     return true;
 }
 
-//bool get_data_from_dcm(std::string imgpath, unsigned char *&buff8, int &width, int &height)
-//{
-//    DcmFileFormat file_format;
-//    OFCondition status = file_format.loadFile(imgpath.c_str());
 
-//    if (status.bad()) {
-//        cerr << "Problem openning file:" << imgpath << endl;
-//        return NULL;
-//    }
-
-//    return LoadDicom(imgpath,buff8, width,height);
-//}
 
 dcmFileReader::dcmFileReader(void)
     : m_nWidth(0),
@@ -452,11 +379,9 @@ bool read_sequenceimig_depth_direction( unsigned char *sequenceImg,
         {
             for(int w = 0; w < width; w++)
             {
-
-                (*pImg++) = (*pAddr);
+                heightimg.setPixel(w,h,qRgb(*pAddr,*pAddr,*pAddr));
                 pAddr += step_00;
             }
-           // pAddr += step;
         }
         return pixmap.convertFromImage(heightimg);
     }
@@ -483,15 +408,13 @@ bool read_sequenceimig_width_direction( unsigned char *sequenceImg,
         const int     step_00 = width;
         const int     step    =   2 * width * height;
         QImage heightimg(width,depth,QImage::Format_Grayscale8);
-        unsigned char *pImg = heightimg.bits();
-        qDebug()<<"depth"<<depth<<"width"<<width;
+
 
         for(int d = 0; d < depth; d++)
         {
             for(int h = 0; h < height; h++)
             {
-
-                (*pImg++) = (*pAddr);
+                heightimg.setPixel(h,d,qRgb(*pAddr,*pAddr,*pAddr));
                 pAddr -= step_00;
             }
             pAddr += step;
@@ -523,15 +446,12 @@ bool read_sequenceimig_height_direction( unsigned char *sequenceImg,
         const int     step_00 = 1;
         const int     step    =   step_01 - width;
         QImage heightimg(width,depth,QImage::Format_Grayscale8);
-        unsigned char *pImg = heightimg.bits();
-        qDebug()<<"depth"<<depth<<"width"<<width;
 
         for(int d = 0; d < depth; d++)
         {
             for(int w = 0; w < width; w++)
             {
-
-                (*pImg++) = (*pAddr);
+                heightimg.setPixel(w,d,qRgb(*pAddr,*pAddr,*pAddr));
                 pAddr += step_00;
             }
             pAddr += step;
@@ -615,4 +535,42 @@ bool dcmFileReader::ReadPixmapFromVolume(
     return status;
 }
 
+
+void BufferSaver::Pgm8Save(char filename[], void *buff, int buffsize, int width, int height, int maxValue)
+{
+    FILE* bufFile = fopen(filename, "wb");
+    if (bufFile != NULL)
+    {
+        fprintf(bufFile, "P5\n");           // P5 filetype
+        fprintf(bufFile, "%d %d\n", width, height);   // dimensions
+        fprintf(bufFile, "%d\n", maxValue);          // Max pixel
+
+        fwrite(buff, buffsize, width*height, bufFile);
+        fclose(bufFile);
+    }
+}
+
+void BufferSaver::Pgm16Save(char filename[], unsigned short *buff, int buffsize, int width, int height, int maxValue)
+{
+    FILE* bufFile = fopen(filename, "wb");
+    if (bufFile != NULL)
+    {
+        fprintf(bufFile, "P5\n");           // P5 filetype
+        fprintf(bufFile, "%d %d\n", width, height);   // dimensions
+        fprintf(bufFile, "%d\n", maxValue);          // Max pixel
+
+        unsigned char *p = (unsigned char*)buff;
+        unsigned char tmp;
+        for (int ind = 0; ind < width*height; ind++)
+        {
+            tmp = *p;
+            *p = *(p + 1);
+            *(p + 1) = tmp;
+            p += 2;
+        }
+
+        fwrite(buff, buffsize, width*height, bufFile);
+        fclose(bufFile);
+    }
+}
 

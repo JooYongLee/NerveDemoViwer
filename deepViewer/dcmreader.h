@@ -114,6 +114,13 @@ bool get_volumen_from_dcm(QStringList imgpathes,
 
 
 bool read_img_from_path(QPixmap &pixmap, QString path);
+
+namespace BufferSaver
+{
+    void Pgm8Save(char filename[], void *buff, int buffsize, int width, int height, int maxValue);
+    void Pgm16Save(char filename[], unsigned short *buff, int buffsize, int width, int height, int maxValue);
+}
+
 /*
  * sequenceImg : sequenceImg [depth X height X width ]
  * examples, ) pixel = [5,10,2]-> 5 *(width*height) + 10 * width + 2
