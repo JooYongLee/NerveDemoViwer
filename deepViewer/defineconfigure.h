@@ -7,6 +7,7 @@
 
 #define BASE_PATH_BOXES     "d:/deepAnnotation"
 enum ImgType {DcmImg, NormImg};
+enum ImgStatus { NONE, GOOD, BAD};
 typedef enum VIEW_FLAG
 {
     AXIAL = 0,

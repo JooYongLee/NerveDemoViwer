@@ -458,7 +458,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
             {
                 if( _selectedBoxVertex!= NoneVertex)
                 {
-                    qDebug()<<"_isSelectedVertex"<<selectBox->sceneBoundingRect();
+//                    qDebug()<<"_isSelectedVertex"<<selectBox->sceneBoundingRect();
                     //                    selectBox->m_moving = false;
                     _ResizeBox(selectBox, dragPoint, _selectedBoxVertex);
                     //                    selectBox->m_moving = true;
@@ -479,7 +479,7 @@ void SceneItems::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
     }
 
     QPointF imgPos = _ConvertScenePos2ImgPos(&event->scenePos());
-    qDebug()<<__FUNCTION__<<event->scenePos()<<pixmapitem->scenePos()<<imgPos;
+//    qDebug()<<__FUNCTION__<<event->scenePos()<<pixmapitem->scenePos()<<imgPos;
     emit cursorPos(&imgPos);
 //    QGraphicsScene::mouseMoveEvent(event);
 

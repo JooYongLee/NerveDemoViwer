@@ -147,7 +147,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_NumImgInViwer(0),
     m_nClassId(QBoxitem::NERVE),
     m_isFileListDeleting(false),
-    m_viewDcmCamera(VIEW_FLAG::CORONAL)
+    m_viewDcmCamera(VIEW_FLAG::CORONAL),
+    m_nCountToBadImg(0),
+    m_nCountToGoodImg(0)
 {    
     QBoxitem::init_map_box();
     ui->setupUi(this);
@@ -211,9 +213,40 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::showPosCursor(QPointF *curpnt)
 {
 //    QLabel *curosrprnt = new QLabel(this);
-    m_CursorTracker->setText(QString("%1,%2")
-                   .arg((int)curpnt->x(),3,10,QChar('0'))
-                   .arg((int)curpnt->y(),3,10,QChar('0')));
+
+    QString currentFileName;
+    if( _GetStatusImg() >= 0 && fileListWidget->count() > 0 )
+        currentFileName =   fileListWidget->item(_GetStatusImg())->text();
+
+//    qDebug()<<__FUNCTION__<<currentFileName;
+    if( currentFileName.length() == 0 )
+    {
+        m_CursorTracker->setText(QString("%1,%2")
+                       .arg((int)curpnt->x(),3,10,QChar('0'))
+                       .arg((int)curpnt->y(),3,10,QChar('0')));
+
+    }
+    else
+    {
+        int counterBadImg = _GetCountOfBadImg();
+        int counterGoodImg = _GetCountOfGoodImg();
+        int counterGT = counterBadImg + counterGoodImg;
+        int counterTotal = fileListWidget->count();
+
+        m_CursorTracker->setText(\
+                    QString("bad/good : %1/%2 , gt/total : %3/%4  ")
+                    .arg(counterBadImg,3,10,QChar('0'))
+                    .arg(counterGoodImg,3,10,QChar('0'))
+                    .arg(counterGT,3,10,QChar('0'))
+                    .arg(counterTotal,3,10,QChar('0'))
+                    +
+                    currentFileName + QString("\t")  +
+                    QString("%1,%2")
+                       .arg((int)curpnt->x(),3,10,QChar('0'))
+                       .arg((int)curpnt->y(),3,10,QChar('0')));
+
+    }
+
 
 
 }
@@ -327,8 +360,6 @@ void MainWindow::dropEvent(QDropEvent *event)
             {
                 qDebug()<<__FUNCTION__<<"anno not!! exists!!";
             }
-//
-
         }
     }
 }
@@ -409,6 +440,10 @@ void MainWindow::UpdateFileListWidget(bool boxrset)
 
 
     fileListWidget->addItems(imglist);
+    for( int ind = 0; ind < fileListWidget->count(); ind++)
+    {
+        fileListWidget->item(ind)->setData(Qt::UserRole, ImgStatus::NONE);
+    }
     qDebug()<<__FUNCTION__<<"after"<<fileListWidget->count();
     m_isFileListDeleting = false;
     if( boxrset )
@@ -507,20 +542,37 @@ void MainWindow::boxListUpdate(int ind, QBoxitem* box)
 {
     boundingBoxList->insertItem(ind, _GetBoxStringFormat(box));
 }
+
+
 void MainWindow::UpdateWorkStateOfAllFileList()
 {
+    _ResetCountOfStatusImg();
     for(int imgCnt = 0; imgCnt < BoxesList.count(); imgCnt++)
     {
         if( BoxesList.at(imgCnt).boxmap.count() > 0 )
         {
+//            BoxesList.at(imgCnt).boxmap
             if( fileListWidget->count() > imgCnt )
             {
-//                fileListWidget->item(imgCnt)->setCheckState(Qt::Checked);
-                fileListWidget->item(imgCnt)->setBackgroundColor(QColor(46,139,87));
+
+                if( QBoxitem::CheckBalanceBox(BoxesList.at(imgCnt).boxmap))
+                {
+                    fileListWidget->item(imgCnt)->setBackgroundColor(QColor(46,139,87));
+                    fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::GOOD);
+                    m_nCountToGoodImg++;
+                }
+                else
+                {
+                    fileListWidget->item(imgCnt)->setBackgroundColor(QColor(255,0,0));
+                    fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::BAD);
+                    m_nCountToBadImg++;
+                }
+
             }
             else
             {
                 fileListWidget->item(imgCnt)->setBackgroundColor(QColor(255,255,255));
+                fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::NONE);
             }
         }
     }
@@ -529,15 +581,35 @@ void MainWindow::UpdateWorkStateOfCurrentFileList()
 {
     if( fileListWidget->count()>0)
     {
-        qDebug()<<__FUNCTION__;
+        int imgstatus = fileListWidget->item(_GetStatusImg())->data(Qt::UserRole).toInt();
+        if(imgstatus==ImgStatus::GOOD)     m_nCountToGoodImg--;
+        else if(imgstatus==ImgStatus::BAD)     m_nCountToBadImg--;
+
         if( BoxesList[_GetStatusImg()].boxmap.count() > 0 )
         {
-            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(46,139,87));
+
+
+             if( QBoxitem::CheckBalanceBox(BoxesList.at(_GetStatusImg()).boxmap))
+             {
+                 fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(46,139,87));
+                 fileListWidget->item(_GetStatusImg())->setData(Qt::UserRole,ImgStatus::GOOD);
+                 m_nCountToGoodImg++;
+             }
+             else
+             {
+
+                 qDebug()<<__FUNCTION__<<fileListWidget->item(_GetStatusImg())->data(Qt::UserRole);
+                  fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(255,0,0));
+                  fileListWidget->item(_GetStatusImg())->setData(Qt::UserRole,ImgStatus::BAD);
+                  m_nCountToBadImg++;
+             }
         }
         else
         {
-            qDebug()<<__FUNCTION__<<"--------------"<<_GetStatusImg()<<fileListWidget->count();
+      //      qDebug()<<__FUNCTION__<<fileListWidget->item(_GetStatusImg())->data(Qt::UserRole);
+//            qDebug()<<__FUNCTION__<<"--------------"<<_GetStatusImg()<<fileListWidget->count();
             fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(255,255,255));
+            fileListWidget->item(_GetStatusImg())->setData(Qt::UserRole,ImgStatus::NONE);
 //            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(0,0,255));
         }
     }

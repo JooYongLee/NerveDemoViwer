@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QUuid>
 
+#include "defineconfigure.h"
 
 
 class QBoxitem
@@ -17,6 +18,8 @@ public:
     enum BoxClass { BACKGROUND, NERVE, LOWERCASE };
 
     static void init_map_box();
+    static bool CheckBalanceBox(QList<QBoxitem> boxes);
+    static bool CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus);
 
     QBoxitem(qreal x_min = 0, qreal y_min = 0, qreal width = 0, qreal height= 0)
         : left(x_min),

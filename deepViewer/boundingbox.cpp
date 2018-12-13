@@ -9,6 +9,39 @@ public:
 };
 std::map<QBoxitem::BoxClass,QString> map_boxclas;
 
+bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes)
+{
+    ImgStatus _;
+    bool status = CheckBalanceBox(boxes, _);
+    return status;
+}
+
+bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus)
+{
+    int nerveCounter = 0;
+    int lowercaseCounter = 0;
+    foreach (QBoxitem box, boxes) {
+        if( box.getClass() == NERVE )
+            nerveCounter++;
+        else
+            lowercaseCounter++;
+    }
+    if( lowercaseCounter == 2)
+    {
+        imgstatus = ImgStatus::GOOD;
+        return true;
+    }
+    else
+    {
+        if( lowercaseCounter == 0 && nerveCounter == 0 )
+            imgstatus = ImgStatus::NONE;
+        else
+            imgstatus = ImgStatus::BAD;
+
+        return false;
+    }
+}
+
 void QBoxitem::init_map_box()
 {
     map_boxclas[BACKGROUND] = "barckground";

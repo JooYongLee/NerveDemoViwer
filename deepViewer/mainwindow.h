@@ -107,6 +107,16 @@ public slots:
     void triggerdCoronalView();
 
 private:
+
+    // the number of image to be fixed
+    int         m_nCountToBadImg;
+    // the number of image which not need to be fixed
+    int         m_nCountToGoodImg;
+
+    int         _GetCountOfBadImg() const       {   return m_nCountToBadImg;    }
+    int         _GetCountOfGoodImg() const       {   return m_nCountToGoodImg;    }
+    void      _ResetCountOfStatusImg()       { m_nCountToBadImg = 0; m_nCountToGoodImg = 0;  }
+
     ImgType m_imgtype;
     VIEW_FLAG m_viewDcmCamera;
 
