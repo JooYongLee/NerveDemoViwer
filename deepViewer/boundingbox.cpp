@@ -26,7 +26,7 @@ bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus)
         else
             lowercaseCounter++;
     }
-    if( lowercaseCounter == 2)
+    if( lowercaseCounter == 2 && nerveCounter <= 2)
     {
         imgstatus = ImgStatus::GOOD;
         return true;

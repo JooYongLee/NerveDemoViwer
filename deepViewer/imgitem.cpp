@@ -24,7 +24,7 @@ QRect ImgItem::GetScaledRect(QPointF pnt, qreal dVariant)
 
     m_dScaledRect.setWidth(width);
     m_dScaledRect.setHeight(height);
-    qDebug()<<normalized_x<<normalized_y<<"--------"<<m_dScaled<<"---"<<m_dScaledRect;
+//    qDebug()<<normalized_x<<normalized_y<<"--------"<<m_dScaled<<"---"<<m_dScaledRect;
 
     return QRect((int)m_dScaledRect.left(),
                  (int)m_dScaledRect.top(),
@@ -40,7 +40,7 @@ void ImgItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
       double mRadius = 10;
       r.setSize(r.size()+mRadius*QSizeF(1, 1));
       r.translate(-this->scenePos()-mRadius*QPointF(1, 1)*.5);//(mRadius*QPointF(1, 1)/2);
-      qDebug()<<this->scenePos()<<r;
+//      qDebug()<<this->scenePos()<<r;
       painter->drawRect(r);
       QGraphicsPixmapItem::paint(painter, option, widget);
 }

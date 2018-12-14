@@ -25,7 +25,7 @@
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
     scene->wheelEvent(event);
-        qDebug()<<__FUNCTION__;
+
 
 }
 void MainWindow::CreateFileMenu()
@@ -98,12 +98,12 @@ int MainWindow::ResetFileMangerAndUpdateFileList(QFileInfo fileinfo)
     QString extension = fileinfo.completeSuffix();
     if( !extension.compare("dcm") )
     {
-        qDebug()<<__FUNCTION__<<"dicom image";
+//        qDebug()<<__FUNCTION__<<"dicom image";
         _SetImgType(ImgType::DcmImg);
     }
     else
     {
-        qDebug()<<__FUNCTION__<<"norm image";
+//        qDebug()<<__FUNCTION__<<"norm image";
         _SetImgType(ImgType::NormImg);
     }
 
@@ -149,7 +149,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_isFileListDeleting(false),
     m_viewDcmCamera(VIEW_FLAG::CORONAL),
     m_nCountToBadImg(0),
-    m_nCountToGoodImg(0)
+    m_nCountToGoodImg(0),
+    m_bPropgateEn(true)
 {    
     QBoxitem::init_map_box();
     ui->setupUi(this);
@@ -250,12 +251,72 @@ void MainWindow::showPosCursor(QPointF *curpnt)
 
 
 }
+void MainWindow::_PropagateBoxes(int beforebox_idx, int nextbox_idx)
+{
+    if( qAbs(beforebox_idx - nextbox_idx) == 1 &&
+            m_bPropgateEn == true )
+    {
+        if(     BoxesList.at(beforebox_idx).boxmap.count() > 0 &&
+                BoxesList.at(nextbox_idx).boxmap.count() == 0)
+        {
+            foreach (QBoxitem beforebox, BoxesList.at(beforebox_idx).boxmap) {
+                QBoxitem nextbox;
+                nextbox.left = beforebox.left;
+                nextbox.right = beforebox.right;
+                nextbox.top = beforebox.top;
+                nextbox.bottom = beforebox.bottom;
+                nextbox.setClass(QBoxitem::BoxClass(beforebox.getClass()));
 
+
+                BoxesList[nextbox_idx].boxmap.append(nextbox);
+
+            }
+            UpdateWorkStateOfCurrentFileList(nextbox_idx);
+        }
+    }
+}
+
+void MainWindow::fileListClicked(QListWidgetItem *items)
+{
+    if( m_isFileListDeleting == false )
+    {
+        int item_ind = items->listWidget()->row(items);
+        int diff_ind = qAbs(item_ind-this->_GetStatusImg());
+        this->_PropagateBoxes(this->_GetStatusImg(), item_ind);
+//        if( diff_ind == 1)
+//        {
+
+//            qDebug()<<"before"<<this->_GetStatusImg()<<"after"<<item_ind;
+////            qDebug()<<__FUNCTION__<<diff_ind;
+//        }
+
+
+        QString full_abs_path = m_imgtype == ImgType::DcmImg ?
+                    items->text():
+                    fileManager.GetBasePath() + '/' +   items->text();
+
+
+        scene->Redraw(full_abs_path,
+                      BoxesList.at(item_ind).boxmap,
+                      ViewConfig(m_imgtype,m_viewDcmCamera));
+
+
+        _SetStatusImg(item_ind);
+        RedrawViwer(item_ind);
+    }
+}
 void MainWindow::fileListChanged(int file_num)
 {
     if( m_isFileListDeleting == false )
     {
-        qDebug()<<file_num;
+        int diff_ind = qAbs(file_num-this->_GetStatusImg());
+
+        this->_PropagateBoxes(this->_GetStatusImg(), file_num);
+//        if( diff_ind == 1)
+//        {
+//            qDebug()<<"before"<<this->_GetStatusImg()<<"after"<<file_num;
+//        }
+//        qDebug()<<file_num;
     //    fileListWidget->row
         QString selectFilename = fileListWidget->item(file_num)->text();
 
@@ -266,7 +327,7 @@ void MainWindow::fileListChanged(int file_num)
                     fileManager.GetBasePath() + '/' +   selectFilename;
 
 
-        qDebug()<<__FUNCTION__<<full_abs_path;
+//        qDebug()<<__FUNCTION__<<full_abs_path;
 
         scene->Redraw(full_abs_path,
                       BoxesList.at(file_num).boxmap,
@@ -300,7 +361,7 @@ bool MainWindow::LoadMultipleJsonFiles(QString filepath)
         JsonBoxSaver::CheckMultipleJsonBox(jsonList) == true )
     {
         m_isFileListDeleting = true;
-        qDebug()<<__FUNCTION__<<"CheckMultipleJsonBox";
+//        qDebug()<<__FUNCTION__<<"CheckMultipleJsonBox";
         loadMultipleFileBoxToViwer(jsonList, filepath);
         UpdateWorkStateOfAllFileList();
         m_isFileListDeleting = false;
@@ -332,9 +393,9 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
     else
     {
-        qDebug()<<__FUNCTION__<<"================";
+//        qDebug()<<__FUNCTION__<<"================";
         QString extension = fileinfo.completeSuffix();
-        qDebug()<<__FUNCTION__<<"========2=======";
+//        qDebug()<<__FUNCTION__<<"========2=======";
         if( !extension.compare("json"))
         {
             loadBoxToViwer(filelist.first());
@@ -342,7 +403,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         }
         else
         {
-            qDebug()<<__FUNCTION__<<"========3=======";
+//            qDebug()<<__FUNCTION__<<"========3=======";
             actionBoxSave();
             int fileNum = this->ResetFileMangerAndUpdateFileList(fileinfo);
             fileListChanged(fileNum);
@@ -354,11 +415,11 @@ void MainWindow::dropEvent(QDropEvent *event)
             {
                 LoadMultipleJsonFiles(check_annotation_dir);
 //                LoadMultipleJsonFiles()
-                qDebug()<<__FUNCTION__<<"anno exists!!";
+//                qDebug()<<__FUNCTION__<<"anno exists!!";
             }
             else
             {
-                qDebug()<<__FUNCTION__<<"anno not!! exists!!";
+//                qDebug()<<__FUNCTION__<<"anno not!! exists!!";
             }
         }
     }
@@ -371,8 +432,8 @@ void MainWindow::RedrawViwer(int id_item)
 {
     QList<QBoxitem> boxitems = BoxesList.at(id_item).boxmap;
 
-    qDebug()<<__FUNCTION__<<id_item<<BoxesList.at(id_item).filename;
-    qDebug()<<__FUNCTION__<<boxitems.count();
+/*    qDebug()<<__FUNCTION__<<id_item<<BoxesList.at(id_item).filename;
+    qDebug()<<__FUNCTION__<<boxitems.count()*/;
 
 //    QMapIterator<int,QBoxitem> iter(boxitems);
      boundingBoxList->clear();     
@@ -381,27 +442,7 @@ void MainWindow::RedrawViwer(int id_item)
         boxListUpdate(ind_key,(QBoxitem*)&boxitems.at(ind_key));
      }
 }
-void MainWindow::fileListClicked(QListWidgetItem *items)
-{
-    if( m_isFileListDeleting == false )
-    {
-        int item_ind = items->listWidget()->row(items);
 
-
-        QString full_abs_path = m_imgtype == ImgType::DcmImg ?
-                    items->text():
-                    fileManager.GetBasePath() + '/' +   items->text();
-
-
-        scene->Redraw(full_abs_path,
-                      BoxesList.at(item_ind).boxmap,
-                      ViewConfig(m_imgtype,m_viewDcmCamera));
-
-
-        _SetStatusImg(item_ind);
-        RedrawViwer(item_ind);
-    }
-}
 ////////////////////////////////////////
 /// \brief MainWindow::UpdateFileListWidget
 /// \param boxrset : default true
@@ -472,7 +513,7 @@ QString MainWindow::_GetBoxStringFormat(QBoxitem *box)
 }
 void MainWindow::updateSelectBox(QBoxitem *selectBox)
 {
-    qDebug()<<__FUNCTION__<<selectBox->getID();
+//    qDebug()<<__FUNCTION__<<selectBox->getID();
     if( selectBox )
     {
         // get box info from current image from viwer
@@ -493,7 +534,7 @@ void MainWindow::updateSelectBox(QBoxitem *selectBox)
                 break;
             }
         }
-        qDebug()<<__FUNCTION__<<"after"<<BoxesList[file_num].boxmap.count();
+//        qDebug()<<__FUNCTION__<<"after"<<BoxesList[file_num].boxmap.count();
 
     }
 
@@ -507,7 +548,7 @@ void MainWindow::DeleteBoxList(QUuid *tobeDeletedItem)
         int file_num = _GetStatusImg();
 
 
-        qDebug()<<__FUNCTION__<<"before"<<BoxesList[file_num].boxmap.count();
+//        qDebug()<<__FUNCTION__<<"before"<<BoxesList[file_num].boxmap.count();
         QList<QBoxitem> boxitems = BoxesList.at(file_num).boxmap;
 
         for( int ind_key = 0; ind_key < boxitems.count(); ind_key++)
@@ -533,7 +574,7 @@ void MainWindow::DeleteBoxList(QUuid *tobeDeletedItem)
 }
 void MainWindow::boxListDelete(int ind)
 {
-    qDebug()<<__FUNCTION__<<ind<<boundingBoxList->item(ind)->text();
+//    qDebug()<<__FUNCTION__<<ind<<boundingBoxList->item(ind)->text();
     boundingBoxList->takeItem(ind);
 //    boundingBoxList->removeItemWidget(boundingBoxList->item(ind));
 }
@@ -577,59 +618,60 @@ void MainWindow::UpdateWorkStateOfAllFileList()
         }
     }
 }
-void MainWindow::UpdateWorkStateOfCurrentFileList()
+void MainWindow::UpdateWorkStateOfCurrentFileList(int indCurrentImg )
 {
     if( fileListWidget->count()>0)
     {
-        int imgstatus = fileListWidget->item(_GetStatusImg())->data(Qt::UserRole).toInt();
+        indCurrentImg = indCurrentImg < 0 ? _GetStatusImg() : indCurrentImg;
+        int imgstatus = fileListWidget->item(indCurrentImg)->data(Qt::UserRole).toInt();
         if(imgstatus==ImgStatus::GOOD)     m_nCountToGoodImg--;
         else if(imgstatus==ImgStatus::BAD)     m_nCountToBadImg--;
 
-        if( BoxesList[_GetStatusImg()].boxmap.count() > 0 )
+        if( BoxesList[indCurrentImg].boxmap.count() > 0 )
         {
 
 
-             if( QBoxitem::CheckBalanceBox(BoxesList.at(_GetStatusImg()).boxmap))
+             if( QBoxitem::CheckBalanceBox(BoxesList.at(indCurrentImg).boxmap))
              {
-                 fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(46,139,87));
-                 fileListWidget->item(_GetStatusImg())->setData(Qt::UserRole,ImgStatus::GOOD);
+                 fileListWidget->item(indCurrentImg)->setBackgroundColor(QColor(46,139,87));
+                 fileListWidget->item(indCurrentImg)->setData(Qt::UserRole,ImgStatus::GOOD);
                  m_nCountToGoodImg++;
              }
              else
              {
 
-                 qDebug()<<__FUNCTION__<<fileListWidget->item(_GetStatusImg())->data(Qt::UserRole);
-                  fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(255,0,0));
-                  fileListWidget->item(_GetStatusImg())->setData(Qt::UserRole,ImgStatus::BAD);
+//                 qDebug()<<__FUNCTION__<<fileListWidget->item(indCurrentImg)->data(Qt::UserRole);
+                  fileListWidget->item(indCurrentImg)->setBackgroundColor(QColor(255,0,0));
+                  fileListWidget->item(indCurrentImg)->setData(Qt::UserRole,ImgStatus::BAD);
                   m_nCountToBadImg++;
              }
         }
         else
         {
-      //      qDebug()<<__FUNCTION__<<fileListWidget->item(_GetStatusImg())->data(Qt::UserRole);
-//            qDebug()<<__FUNCTION__<<"--------------"<<_GetStatusImg()<<fileListWidget->count();
-            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(255,255,255));
-            fileListWidget->item(_GetStatusImg())->setData(Qt::UserRole,ImgStatus::NONE);
+      //      qDebug()<<__FUNCTION__<<fileListWidget->item(indCurrentImg)->data(Qt::UserRole);
+//            qDebug()<<__FUNCTION__<<"--------------"<<indCurrentImg<<fileListWidget->count();
+            fileListWidget->item(indCurrentImg)->setBackgroundColor(QColor(255,255,255));
+            fileListWidget->item(indCurrentImg)->setData(Qt::UserRole,ImgStatus::NONE);
 //            fileListWidget->item(_GetStatusImg())->setBackgroundColor(QColor(0,0,255));
         }
     }
 }
 void MainWindow::addBoxListToViwer(QBoxitem* box)
 {
-    qDebug()<<__FUNCTION__;
+//    qDebug()<<__FUNCTION__;
     int    row_id = boundingBoxList->count();
 
     QString boxstr = _GetBoxStringFormat(box);
 
 
     boundingBoxList->insertItem(row_id,boxstr);
-    qDebug()<<__FUNCTION__<<"_GetBoxStringFormat"<<boundingBoxList->count()<<row_id;
-    qDebug()<<__FUNCTION__<<_GetStatusImg()<<BoxesList.size();//->count()<<row_id;
+//    qDebug()<<__FUNCTION__<<"_GetBoxStringFormat"<<boundingBoxList->count()<<row_id;
+//    qDebug()<<__FUNCTION__<<_GetStatusImg()<<BoxesList.size();//->count()<<row_id;
     //qDebug()<<__FUNCTION__<<boxstr<<box->getID();
 //    BoxesList.at(_GetStatusImg()).boxmap.insert(row_id, QBoxitem());
     if( _GetStatusImg() < BoxesList.size())
     {
-        qDebug()<<__FUNCTION__<<"add box to viewer"<<box->getID();
+//        qDebug()<<__FUNCTION__<<"add box to viewer"<<box->getID();
         BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);        
     }
 
@@ -641,7 +683,7 @@ void MainWindow::addBoxListToViwer(QBoxitem* box)
 void MainWindow::buttonclicked()
 {
     scene->ComputeBoxInImg();
-    qDebug()<<"buttonclicked";
+//    qDebug()<<"buttonclicked";
 }
 
 MainWindow::~MainWindow()
@@ -676,6 +718,18 @@ void MainWindow::createToolBarAction()
     this->drawAction->setCheckable(true);
     this->drawAction->setShortcut(QKeySequence(Qt::Key_D));
 
+    ActionPropagate =   new QAction("Propagate(P)",this);
+    ActionPropagate->setIcon(QIcon(":/icons/propagate.png"));
+    ActionPropagate->setShortcut(QKeySequence(Qt::Key_P));
+    ActionPropagate->setCheckable(true);
+    if( m_bPropgateEn )
+        ActionPropagate->setChecked(true);
+    else
+        ActionPropagate->setChecked(false);
+
+
+
+
     loadBoxAction       =   new QAction("Load Boxes", this);
     loadBoxAction->setIcon(QIcon(":/icons/loadBox.png"));
     loadBoxAction->setCheckable(false);
@@ -686,7 +740,7 @@ void MainWindow::createToolBarAction()
     actionGroup->addAction(drawAction);
 //    actionGroup->addAction(saveAction);
 //    actionGroup->
-    qDebug()<<"====================";
+//    qDebug()<<"====================";
 }
 void MainWindow::actioniGroupClick(QAction *action)
 {
@@ -701,6 +755,8 @@ void MainWindow::createConnection()
     connect(saveAction, SIGNAL(triggered(bool)), this, SLOT(actionBoxSave()));
 
     connect(loadBoxAction, SIGNAL(triggered(bool)), this, SLOT(actionloadBox()));
+
+    connect(ActionPropagate   , SIGNAL(triggered()), this, SLOT(triggerPropagate()));
 }
 
 void MainWindow::loadMultipleFileBoxToViwer(QStringList filepath, QString basepath)
@@ -713,7 +769,7 @@ void MainWindow::loadMultipleFileBoxToViwer(QStringList filepath, QString basepa
 
     QList<BoxManager> boxFromJson = loadboxFormat.GetBoxes();
 
-    qDebug()<<__FUNCTION__<<"loanding---------->"<<boxFromJson.count();
+//    qDebug()<<__FUNCTION__<<"loanding---------->"<<boxFromJson.count();
 
 
     // loading boxes from json if only the counts of box is less than the number of list image
@@ -736,7 +792,7 @@ void MainWindow::loadMultipleFileBoxToViwer(QStringList filepath, QString basepa
 
                     BoxesList[cnt].boxmap.swap(boxFromJson[k].boxmap);
                     BoxesList[cnt].filename = check_filename;
-                    qDebug()<<__FUNCTION__<<"loading complte"<<item_filename;
+//                    qDebug()<<__FUNCTION__<<"loading complte"<<item_filename;
                     break;
                 }
             }
@@ -752,7 +808,7 @@ void MainWindow::loadBoxToViwer(QString filepath)
 
     if( !checkfile.exists())
     {
-        qDebug()<<__FUNCTION__<<"not exist---------------------------";
+//        qDebug()<<__FUNCTION__<<"not exist---------------------------";
         return;
     }
 
@@ -780,7 +836,7 @@ void MainWindow::loadBoxToViwer(QString filepath)
                     // when file name from json is in accordance with the filename of the list widget
                     // load box info
                     BoxesList[cnt].boxmap.swap(boxFromJson[k].boxmap);
-                    qDebug()<<__FUNCTION__<<"loading complte"<<item_filename;
+//                    qDebug()<<__FUNCTION__<<"loading complte"<<item_filename;
                     break;
                 }
             }
@@ -896,6 +952,7 @@ void MainWindow::creatToolBar()
     drawingToolBar->addAction(saveAction);
     drawingToolBar->addAction(dnnAction);
     drawingToolBar->addAction(loadBoxAction);
+    drawingToolBar->addAction(ActionPropagate);
 }
 
 
@@ -932,6 +989,19 @@ void MainWindow::triggeredLoadBoxes()
 {
     qDebug()<<__FUNCTION__;
 }
+void MainWindow::triggerPropagate()
+{
+    if( m_bPropgateEn )
+    {
+        m_bPropgateEn = false;
+        ActionPropagate->setChecked(false);
+    }
+    else
+    {
+        m_bPropgateEn = true;
+        ActionPropagate->setChecked(true);
+    }
+}
 
 void MainWindow::createToolBarActions()
 {
@@ -949,7 +1019,6 @@ void MainWindow::createToolBarActions()
 
     ActionNerve->setIcon(QIcon(":/icons/nerve.png"));
     ActionLowerCase->setIcon(QIcon(":/icons/toothbone.png"));    
-
 
 
 
@@ -1074,4 +1143,18 @@ void MainWindow::createClassToolBars()
 {
     drawingToolBar->addWidget(m_classBarButton);
     drawingToolBar->addWidget(CameraViewButton);
+}
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QMessageBox::StandardButton resBtn = QMessageBox::question( this,"deepViwer",
+                                                                tr("Box Save and exit?\n"),
+                                                                QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                                                                QMessageBox::Yes);
+    if (resBtn != QMessageBox::Yes) {
+        event->ignore();
+    } else {
+        actionBoxSave();
+        event->accept();
+
+    }
 }

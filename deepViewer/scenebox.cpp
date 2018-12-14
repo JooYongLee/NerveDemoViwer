@@ -31,7 +31,7 @@ void SceneItems::Redraw(QString path,ViewConfig viewConfig)
     QSize imgSize;
     if( viewConfig.imgType == ImgType::DcmImg)
     {
-        qDebug()<<__FUNCTION__<<"--------------------"<<path<<path.toInt();
+//        qDebug()<<__FUNCTION__<<"--------------------"<<path<<path.toInt();
         this->dcmReader.ReadPixmapFromVolume(viewConfig.viewFlag, path.toInt(),img);
     }
     else
@@ -76,7 +76,7 @@ void SceneItems::Redraw(QString path, QList<QBoxitem> boxitems, ViewConfig viewC
         QRectF sceneRect = _ConvertInverseBoundingBox(&box);
 
         QRectF bounding_rect = _GetBoundingRectOnImg(sceneRect, sceneRect.topLeft());
-        qDebug()<<__FUNCTION__<<box.getClass();
+//        qDebug()<<__FUNCTION__<<box.getClass();
 
         newbox->SetProperty(sceneRect, bounding_rect, box_uid, box_list_id, box_class_id );
 
@@ -144,7 +144,7 @@ void SceneItems::createGuideLine()
 
 void SceneItems::setMode(Mode mode)
 {
-    qDebug()<<__FUNCTION__<<mode;
+//    qDebug()<<__FUNCTION__<<mode;
     sceneMode = mode;
     QGraphicsView::DragMode vMode = QGraphicsView::NoDrag;
 
@@ -184,17 +184,17 @@ void SceneItems::ComputeBoxInImg()
     QList<QGraphicsItem*> colItems = collidingItems(pixmapitem);
     if(colItems.isEmpty())
     {
-        qDebug()<<"empty colliding";
+//        qDebug()<<"empty colliding";
 //        this->setPos(anchorPoint);
     }
     else
     {
         foreach(QGraphicsItem* item, colItems)
         {
-            qDebug()<<item->sceneBoundingRect();
+//            qDebug()<<item->sceneBoundingRect();
         }
 
-        qDebug()<<"colliding item exists";
+//        qDebug()<<"colliding item exists";
 
     }
 
@@ -222,7 +222,7 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
                      origPoint.y(),
                      0,0);
 
-        qDebug()<<origPoint<<pixmapitem->sceneBoundingRect();
+//        qDebug()<<origPoint<<pixmapitem->sceneBoundingRect();
 
 
 
@@ -236,7 +236,7 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
             itemBoundingBox->setPos(0,0);
             itemBoundingBox->setSceneBoundingRect(pixmapitem->sceneBoundingRect());
             itemBoundingBox->SetBoxClass(QBoxitem::BoxClass(m_nBoxClass));
-            qDebug()<<__FUNCTION__<<QBoxitem::NERVE<<m_nBoxClass;
+//            qDebug()<<__FUNCTION__<<QBoxitem::NERVE<<m_nBoxClass;
 
             this->addItem(itemBoundingBox);
 
@@ -255,7 +255,7 @@ void SceneItems::mousePressEvent(QGraphicsSceneMouseEvent *event){
             {
 
                 _selectedBoxVertex = _isSelectedVertex(selectBox, origPoint, gloabl_rect_eidt_dist_thresh);
-                qDebug()<<"compute vertex";
+//                qDebug()<<"compute vertex";
             }
         }
 
@@ -314,13 +314,13 @@ void SceneItems::_ResizeBox(BoundingBox *box, QPointF dragPoint, RectVerices ver
     QRectF imgRect = this->_GetPixmapRectOnDrawing(box_cetner);
     if( vertex == TopLeft )
     {
-        qDebug()<<"before"<<rect;
+//        qDebug()<<"before"<<rect;
 
         rect = QRectF( QPointF(dragPoint.x(), dragPoint.y()),
                      QPointF(boxRect.right(), boxRect.bottom()));
 
 
-        qDebug()<<"after"<<rect;
+//        qDebug()<<"after"<<rect;
 
     }
     else if( vertex == TopRight )
@@ -526,7 +526,7 @@ void SceneItems::UpdateBoxItems()
 
 void SceneItems::wheelEvent(QWheelEvent* event)
 {
-    qDebug()<<__FUNCTION__;
+//    qDebug()<<__FUNCTION__;
 //    pixmapitem->wheelEvent(event);
 
     QList<QGraphicsItem*> colItems = collidingItems(pixmapitem);//, Qt::ItemSelectionMode::);
@@ -540,15 +540,15 @@ void SceneItems::wheelEvent(QWheelEvent* event)
     //    {
     foreach(QGraphicsItem* item, colItems)
     {
-        qDebug()<<"colliding item exists"<<pixmapitem->m_dScaled;
+//        qDebug()<<"colliding item exists"<<pixmapitem->m_dScaled;
         if( pixmapitem->m_dScaled < 0.75)
         {
             item->setVisible(false);
 //            item->setPos(100,100);
-            qDebug()<<"hidden";
+//            qDebug()<<"hidden";
         }
 
-        qDebug()<<item->sceneBoundingRect();
+//        qDebug()<<item->sceneBoundingRect();
     }
 //    qDebug()<<"empty colliding";
     foreach(QGraphicsItem* allitem, items())
@@ -559,7 +559,7 @@ void SceneItems::wheelEvent(QWheelEvent* event)
             if( pixmapitem->m_dScaled >= 0.75)
             {
                 box->setVisible(true);
-                qDebug()<<"show";
+//                qDebug()<<"show";
             }
 
         }
@@ -590,7 +590,7 @@ QRectF SceneItems::_ConvertInverseBoundingBox(QBoxitem *box)
 QPointF SceneItems::_ConvertScenePos2ImgPos(QPointF *scenPos)
 {
     QRectF imgRect =  pixmapitem->sceneBoundingRect();
-    qDebug()<<__FUNCTION__<<imgRect;
+//    qDebug()<<__FUNCTION__<<imgRect;
     QPointF OriginImg = imgRect.topLeft();
 
     QSize origin_size = pixmapitem->m_imgSize;
@@ -637,7 +637,7 @@ QBoxitem SceneItems::_ConvertBoundingBox(BoundingBox *box)
 
     src_domain_box.setClass( QBoxitem::BoxClass(box->GetBoxClass()));
 
-    qDebug()<<__FUNCTION__<<src_domain_box.getClass()<<box->GetBoxClass();
+//    qDebug()<<__FUNCTION__<<src_domain_box.getClass()<<box->GetBoxClass();
 
     return src_domain_box;
 }
@@ -654,13 +654,13 @@ void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
         {
             removeItem(itemBoundingBox);
             delete itemBoundingBox;
-            qDebug()<<__FUNCTION__<<"so tiny!!!!!!!!!!!!!!!!!!!11";
+//            qDebug()<<__FUNCTION__<<"so tiny!!!!!!!!!!!!!!!!!!!11";
         }
         else
         {
-            qDebug()<<__FUNCTION__<<origPoint<<event->scenePos();
-            qDebug()<<__FUNCTION__<<itemBoundingBox->sceneBoundingRect();
-            qDebug()<<__FUNCTION__<<itemBoundingBox->rect();
+//            qDebug()<<__FUNCTION__<<origPoint<<event->scenePos();
+//            qDebug()<<__FUNCTION__<<itemBoundingBox->sceneBoundingRect();
+//            qDebug()<<__FUNCTION__<<itemBoundingBox->rect();
 
             QUuid uid = QUuid::createUuid();
             QBoxitem boxitems = _ConvertBoundingBox(itemBoundingBox);

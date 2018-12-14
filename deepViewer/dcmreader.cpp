@@ -286,7 +286,7 @@ bool dcmFileReader::GetVolumeFromDCM(QStringList imgpathes,
            }
            SAFE_DELETE_ARRAY(temp_buff);
 
-           qDebug()<<__FUNCTION__<<*path<<"loading complte";
+//           qDebug()<<__FUNCTION__<<*path<<"loading complte";
        }
     }
 
@@ -373,7 +373,7 @@ bool read_sequenceimig_depth_direction( unsigned char *sequenceImg,
         //const int     step    =   step_01 - width;
         QImage heightimg(width,height,QImage::Format_Grayscale8);
         unsigned char *pImg = heightimg.bits();
-        qDebug()<<"depth"<<depth<<"width"<<width;
+//        qDebug()<<"depth"<<depth<<"width"<<width;
 
         for(int h = 0; h < height; h++)
         {

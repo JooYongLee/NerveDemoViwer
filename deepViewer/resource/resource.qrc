@@ -11,5 +11,6 @@
         <file>axial.png</file>
         <file>coronal.png</file>
         <file>sagittal.png</file>
+        <file>propagate.png</file>
     </qresource>
 </RCC>

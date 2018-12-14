@@ -16,6 +16,7 @@
 #include <QTextEdit>
 #include <QToolBar>
 #include <QLabel>
+#include <QCloseEvent>
 
 #include "boundingbox.h"
 #include "classtoolbarbutton.h"
@@ -106,7 +107,14 @@ public slots:
     void triggerAxialView();
     void triggerdCoronalView();
 
+    void triggerPropagate();
+
+    void closeEvent(QCloseEvent *event);
+
 private:
+    bool m_bPropgateEn;
+
+    void _PropagateBoxes(int beforebox_idx, int nextbox_idx);
 
     // the number of image to be fixed
     int         m_nCountToBadImg;
@@ -131,7 +139,7 @@ private:
     ///
     ///
     void loadBoxToViwer(QString filepath);
-    void UpdateWorkStateOfCurrentFileList();
+    void UpdateWorkStateOfCurrentFileList(int indCurrentImg = -1);
     void UpdateWorkStateOfAllFileList();
 
     //
@@ -150,6 +158,8 @@ private:
     QAction *ActionCoronal;
     QAction *ActionAxial;
     QAction *ActionSagittal;
+
+    QAction *ActionPropagate;
 
 
 

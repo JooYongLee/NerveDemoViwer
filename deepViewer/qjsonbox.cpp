@@ -31,7 +31,7 @@ QString JsonBoxSaver::GetBasePath()
     QDir dirCreator;
     dirCreator.mkpath(savepath);
 
-    qDebug()<<__FUNCTION__<<savepath;
+//    qDebug()<<__FUNCTION__<<savepath;
     return savepath;
 }
 
@@ -68,7 +68,7 @@ QJsonArray JsonBoxSaver::createJsonObj(BoxFormat boxes)
 
         if( count[QBoxitem::NERVE] >0 )
         {
-            qDebug()<<__FUNCTION__<<"------------------"<<map_boxclas[QBoxitem::NERVE];
+//            qDebug()<<__FUNCTION__<<"------------------"<<map_boxclas[QBoxitem::NERVE];
 
 //            item[map_boxclas[]] = boxes[QBoxitem::NERVE];
             item["nerve"] = boxes[QBoxitem::NERVE];
@@ -279,7 +279,7 @@ BoxFormat JsonBoxSaver::loadJson(QString box_json_path )
                 foreach (QString key, keylist) {
                     if( !key.compare("filename"))
                     {
-                        qDebug()<<__FUNCTION__<<key<<obj[key].toString();
+//                        qDebug()<<__FUNCTION__<<key<<obj[key].toString();
                         loadedBox.filename = obj[key].toString();
                     }
                     else if( !key.compare("nerve"))
@@ -320,7 +320,7 @@ BoxFormat JsonBoxSaver::loadJson(QString box_json_path )
                             }
 
                         }
-                        qDebug()<<__FUNCTION__<<"loading--------------------";
+//                        qDebug()<<__FUNCTION__<<"loading--------------------";
 
                     }
                 }
