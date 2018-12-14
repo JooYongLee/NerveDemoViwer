@@ -189,10 +189,10 @@ void SceneItems::ComputeBoxInImg()
     }
     else
     {
-        foreach(QGraphicsItem* item, colItems)
-        {
-//            qDebug()<<item->sceneBoundingRect();
-        }
+//        foreach(QGraphicsItem* item, colItems)
+//        {
+////            qDebug()<<item->sceneBoundingRect();
+//        }
 
 //        qDebug()<<"colliding item exists";
 
@@ -201,6 +201,7 @@ void SceneItems::ComputeBoxInImg()
 }
 bool SceneItems::_isInsideImage(QPointF pressedPos)
 {
+    Q_UNUSED(pressedPos);
     if(pixmapitem->sceneBoundingRect().contains(origPoint))
     {
         return true;

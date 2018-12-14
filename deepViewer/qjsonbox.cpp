@@ -188,26 +188,34 @@ BoxManager JsonBoxSaver::loadJsonFrom(QString box_json_path )
 
         foreach (QString key, keylist) {
             QJsonArray boxarray;
+            QString lowerkey = key.toLower();
+            qDebug()<<__FUNCTION__<<key<<lowerkey;
 
-            if( !key.compare("nerve"))
+            if( !lowerkey.compare("nerve"))
             {
+                qDebug()<<"nerve-------------"<<boxes_a_filse[lowerkey];
 
                 if( boxes_a_filse[key].isArray() )
                 {
                     boxarray = boxes_a_filse[key].toArray();
-//                    qDebug()<<"nerve"<<boxes_a_filse[key].toArray();
+
+                }
+                else
+                {
+
                 }
             }
-            else if (!key.compare("lowercase"))
+            else if (!lowerkey.compare("lowercase"))
             {
                 if( boxes_a_filse[key].isArray() )
                 {
                     boxarray = boxes_a_filse[key].toArray();
-//                    qDebug()<<"lowercase"<<boxes_a_filse[key].toArray();
+//                    qDebug()<<"lowercase"<<boxes_a_filse[lowerkey].toArray();
                 }
             }
             else
             {
+                qDebug()<<__FUNCTION__<<"cannot find key";
 
             }
 
@@ -226,10 +234,11 @@ BoxManager JsonBoxSaver::loadJsonFrom(QString box_json_path )
                         boxitem.bottom  = aBox.at(3).toDouble();
                         //                        boxes.boxmap.append(boxitem);
 
-                        if( !key.compare("nerve"))       boxitem.setClass(QBoxitem::NERVE);
-                        else if( !key.compare("lowercase")) boxitem.setClass(QBoxitem::LOWERCASE);
+                        if( !lowerkey.compare("nerve"))       boxitem.setClass(QBoxitem::NERVE);
+                        else if( !lowerkey.compare("lowercase")) boxitem.setClass(QBoxitem::LOWERCASE);
 
                         boxes.boxmap.append(boxitem);
+                        qDebug()<<__FUNCTION__<<"box add complete";
                     }
                 }
             }
@@ -275,19 +284,23 @@ BoxFormat JsonBoxSaver::loadJson(QString box_json_path )
                 QStringList keylist = obj.keys();
                 QJsonArray boxarray;
 
-                int boxescnt = 0;
+
+//                int boxescnt = 0;
                 foreach (QString key, keylist) {
-                    if( !key.compare("filename"))
+
+                    QString lowerkey = key.toLower();
+                    qDebug()<<__FUNCTION__<<key<<lowerkey;
+                    if( !lowerkey.compare("filename"))
                     {
 //                        qDebug()<<__FUNCTION__<<key<<obj[key].toString();
                         loadedBox.filename = obj[key].toString();
                     }
-                    else if( !key.compare("nerve"))
+                    else if( !lowerkey.compare("nerve"))
                     {
 
                         boxarray = obj[key].toArray();
                     }
-                    else if( !key.compare("lowercase"))
+                    else if( !lowerkey.compare("lowercase"))
                     {
                         boxarray = obj[key].toArray();
 
@@ -313,8 +326,8 @@ BoxFormat JsonBoxSaver::loadJson(QString box_json_path )
                                 boxitem.bottom = abox.at(3).toDouble();
 
                                 //boxitem.set(boxescnt++);
-                                if( !key.compare("nerve"))       boxitem.setClass(QBoxitem::NERVE);
-                                else if( !key.compare("lowercase")) boxitem.setClass(QBoxitem::LOWERCASE);
+                                if( !lowerkey.compare("nerve"))       boxitem.setClass(QBoxitem::NERVE);
+                                else if( !lowerkey.compare("lowercase")) boxitem.setClass(QBoxitem::LOWERCASE);
 
                                 loadedBox.boxmap.append(boxitem);
                             }

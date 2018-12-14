@@ -4,8 +4,8 @@ QRect ImgItem::GetScaledRect(QPointF pnt, qreal dVariant)
 {
     qreal  width = m_dScaledRect.width()  *(1+ dVariant);
     qreal  height = m_dScaledRect.height() *(1+ dVariant);
-    qreal   left    =   pnt.x() - width / 2.0;
-    qreal   top    =   pnt.y() - height / 2.0;
+//    qreal   left    =   pnt.x() - width / 2.0;
+//    qreal   top    =   pnt.y() - height / 2.0;
 
     qreal normalized_x = (pnt.x() -this->sceneBoundingRect().x() )/this->sceneBoundingRect().width();
     qreal normalized_y = (pnt.y() -this->sceneBoundingRect().y() )/this->sceneBoundingRect().height();

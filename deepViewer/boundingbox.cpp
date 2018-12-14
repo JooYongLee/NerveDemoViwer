@@ -1,6 +1,7 @@
 
 #include "boundingbox.h"
 #include <QDebug>
+#define VALID_BOX_AREA_THRESHOLD        10
 class BoxClass
 {
 public:
@@ -20,16 +21,50 @@ bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus)
 {
     int nerveCounter = 0;
     int lowercaseCounter = 0;
+    int invalidAreaCounter = 0;
+    double AverageNerveArea = 0.;
+    double AverageLowercaseArea = 0.;
     foreach (QBoxitem box, boxes) {
+        if( !box.isValidArea())
+            invalidAreaCounter++;
+
         if( box.getClass() == NERVE )
+        {
+            AverageNerveArea += box.getAerea();
             nerveCounter++;
+        }
         else
+        {
+            AverageLowercaseArea += box.getAerea();
             lowercaseCounter++;
+        }
     }
-    if( lowercaseCounter == 2 && nerveCounter <= 2)
+    if( lowercaseCounter == 2 && nerveCounter <= 2 && invalidAreaCounter == 0)
     {
-        imgstatus = ImgStatus::GOOD;
-        return true;
+        if( nerveCounter > 0 )
+        {
+
+            AverageNerveArea /= nerveCounter;
+            AverageLowercaseArea /= lowercaseCounter;
+            qDebug()<<__FUNCTION__<<"nerve"<<AverageNerveArea<<"lowercase"<<AverageLowercaseArea;
+            if( AverageNerveArea < AverageLowercaseArea )
+            {
+                imgstatus = ImgStatus::GOOD;
+                return true;
+            }
+            else
+            {
+                imgstatus = ImgStatus::BAD;
+                return false;
+            }
+
+        }
+        else
+        {
+            imgstatus = ImgStatus::GOOD;
+            return true;
+        }
+
     }
     else
     {
@@ -40,6 +75,20 @@ bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus)
 
         return false;
     }
+}
+double QBoxitem::getAerea()
+{
+    qreal width = qMax(right-left,0.);
+    qreal height = qMax(bottom - top,0.);
+    return width * height;
+}
+bool QBoxitem::isValidArea()
+{
+    double area = this->getAerea();
+    if( area > VALID_BOX_AREA_THRESHOLD)
+        return true;
+    else
+        return false;
 }
 
 void QBoxitem::init_map_box()

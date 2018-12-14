@@ -22,7 +22,7 @@
 #include "classtoolbarbutton.h"
 #include "filemanager.h"
 #include "scenebox.h"
-
+#include "filelistwidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -64,7 +64,10 @@ public:
     myQView *view;
 
     QListWidget *boundingBoxList;
-    QListWidget *fileListWidget;
+//    QListWidget *fileListWidget;
+    FileListWidget *fileListWidget;
+
+    QAction *fileListAction;
 
 
     explicit MainWindow(QWidget *parent = 0);
@@ -110,6 +113,8 @@ public slots:
     void triggerPropagate();
 
     void closeEvent(QCloseEvent *event);
+
+    void setFocusFileList();
 
 private:
     bool m_bPropgateEn;

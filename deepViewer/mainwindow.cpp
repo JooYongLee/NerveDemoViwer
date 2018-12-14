@@ -13,6 +13,7 @@
 #include <QStatusBar>
 #include <QLabel>
 #include <QDateTime>
+#include <QShortcut>
 #include "filemanager.h"
 #include "qjsonbox.h"
 //void myQView::wheelEvent(QWheelEvent* event)
@@ -64,7 +65,7 @@ void MainWindow::CreateDockWidget()
 
 
 
-    fileListWidget = new QListWidget(dock);
+    fileListWidget = new FileListWidget(dock);
     QStringList strs;
     fileListWidget->addItems(strs);
     //customerList2->item()
@@ -150,7 +151,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_viewDcmCamera(VIEW_FLAG::CORONAL),
     m_nCountToBadImg(0),
     m_nCountToGoodImg(0),
-    m_bPropgateEn(true)
+    m_bPropgateEn(false)
 {    
     QBoxitem::init_map_box();
     ui->setupUi(this);
@@ -200,6 +201,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(scene,SIGNAL(cursorPos(QPointF*)),this,SLOT(showPosCursor(QPointF*)));
 
 
+//    fileListAction = new QAction(this);
+//    QList<QKeySequence> KeyfileListAction;
+//    KeyfileListAction << QKeySequence(Qt::Key_Up)<<QKeySequence(Qt::Key_Down);
+//    QShortcut *keyFileList = new QShortcut(QKeySequence(Qt::Key_Up),fileListWidget);
+//    fileListAction->setShortcuts(KeyfileListAction);
+//    fileListWidget->
+//    this->addAction(fileListAction);
+//    connect(keyFileList,SIGNAL(activated()),fileListWidget,SLOT(setFocus()));
+//    connect(fileListAction,SIGNAL(triggered(bool)),fileListWidget,SLOT(setFocus()));
+//    fileListAction->setShortcuts(KeyfileListAction);
+
+
+
+
 
     createToolBarAction();
     createConnection();
@@ -211,6 +226,14 @@ MainWindow::MainWindow(QWidget *parent) :
     createToolBarButtons();
     createClassToolBars();
 }
+void MainWindow::setFocusFileList()
+{
+//    qDebug()<<__FUNCTION__;
+////    fileListWidget->setFocus(Qt::NoFocusReason);
+//    fileListWidget->setFocus();
+
+}
+
 void MainWindow::showPosCursor(QPointF *curpnt)
 {
 //    QLabel *curosrprnt = new QLabel(this);
@@ -259,18 +282,36 @@ void MainWindow::_PropagateBoxes(int beforebox_idx, int nextbox_idx)
         if(     BoxesList.at(beforebox_idx).boxmap.count() > 0 &&
                 BoxesList.at(nextbox_idx).boxmap.count() == 0)
         {
+/////// extract Lower case
+            int extract_box_id = QBoxitem::BoxClass::LOWERCASE;
             foreach (QBoxitem beforebox, BoxesList.at(beforebox_idx).boxmap) {
-                QBoxitem nextbox;
-                nextbox.left = beforebox.left;
-                nextbox.right = beforebox.right;
-                nextbox.top = beforebox.top;
-                nextbox.bottom = beforebox.bottom;
-                nextbox.setClass(QBoxitem::BoxClass(beforebox.getClass()));
-
-
-                BoxesList[nextbox_idx].boxmap.append(nextbox);
-
+                if(beforebox.getClass()==extract_box_id)
+                {
+                    QBoxitem nextbox;
+                    nextbox.left = beforebox.left;
+                    nextbox.right = beforebox.right;
+                    nextbox.top = beforebox.top;
+                    nextbox.bottom = beforebox.bottom;
+                    nextbox.setClass(QBoxitem::BoxClass(beforebox.getClass()));
+                    BoxesList[nextbox_idx].boxmap.append(nextbox);
+                }
             }
+///////// extract nerve
+            extract_box_id = QBoxitem::BoxClass::NERVE;
+            foreach (QBoxitem beforebox, BoxesList.at(beforebox_idx).boxmap) {
+                if(beforebox.getClass()==extract_box_id)
+                {
+                    QBoxitem nextbox;
+                    nextbox.left = beforebox.left;
+                    nextbox.right = beforebox.right;
+                    nextbox.top = beforebox.top;
+                    nextbox.bottom = beforebox.bottom;
+                    nextbox.setClass(QBoxitem::BoxClass(beforebox.getClass()));
+                    BoxesList[nextbox_idx].boxmap.append(nextbox);
+                }
+            }
+
+
             UpdateWorkStateOfCurrentFileList(nextbox_idx);
         }
     }
@@ -281,7 +322,8 @@ void MainWindow::fileListClicked(QListWidgetItem *items)
     if( m_isFileListDeleting == false )
     {
         int item_ind = items->listWidget()->row(items);
-        int diff_ind = qAbs(item_ind-this->_GetStatusImg());
+//        items->listWidget()->item(item_ind)->setForeground(Qt::yellow);
+//        int diff_ind = qAbs(item_ind-this->_GetStatusImg());
         this->_PropagateBoxes(this->_GetStatusImg(), item_ind);
 //        if( diff_ind == 1)
 //        {
@@ -309,7 +351,7 @@ void MainWindow::fileListChanged(int file_num)
 {
     if( m_isFileListDeleting == false )
     {
-        int diff_ind = qAbs(file_num-this->_GetStatusImg());
+//        int diff_ind = qAbs(file_num-this->_GetStatusImg());
 
         this->_PropagateBoxes(this->_GetStatusImg(), file_num);
 //        if( diff_ind == 1)
@@ -534,10 +576,9 @@ void MainWindow::updateSelectBox(QBoxitem *selectBox)
                 break;
             }
         }
-//        qDebug()<<__FUNCTION__<<"after"<<BoxesList[file_num].boxmap.count();
 
     }
-
+//    fileListWidget->setFocus(Qt::NoFocusReason);
 }
 
 void MainWindow::DeleteBoxList(QUuid *tobeDeletedItem)
@@ -584,7 +625,8 @@ void MainWindow::boxListUpdate(int ind, QBoxitem* box)
     boundingBoxList->insertItem(ind, _GetBoxStringFormat(box));
 }
 
-
+QColor goodColor(153,255,153);
+QColor badColor(255,102,102);
 void MainWindow::UpdateWorkStateOfAllFileList()
 {
     _ResetCountOfStatusImg();
@@ -598,13 +640,13 @@ void MainWindow::UpdateWorkStateOfAllFileList()
 
                 if( QBoxitem::CheckBalanceBox(BoxesList.at(imgCnt).boxmap))
                 {
-                    fileListWidget->item(imgCnt)->setBackgroundColor(QColor(46,139,87));
+                    fileListWidget->item(imgCnt)->setBackgroundColor(goodColor);
                     fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::GOOD);
                     m_nCountToGoodImg++;
                 }
                 else
                 {
-                    fileListWidget->item(imgCnt)->setBackgroundColor(QColor(255,0,0));
+                    fileListWidget->item(imgCnt)->setBackgroundColor(badColor);
                     fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::BAD);
                     m_nCountToBadImg++;
                 }
@@ -633,7 +675,7 @@ void MainWindow::UpdateWorkStateOfCurrentFileList(int indCurrentImg )
 
              if( QBoxitem::CheckBalanceBox(BoxesList.at(indCurrentImg).boxmap))
              {
-                 fileListWidget->item(indCurrentImg)->setBackgroundColor(QColor(46,139,87));
+                 fileListWidget->item(indCurrentImg)->setBackgroundColor(goodColor);
                  fileListWidget->item(indCurrentImg)->setData(Qt::UserRole,ImgStatus::GOOD);
                  m_nCountToGoodImg++;
              }
@@ -641,7 +683,7 @@ void MainWindow::UpdateWorkStateOfCurrentFileList(int indCurrentImg )
              {
 
 //                 qDebug()<<__FUNCTION__<<fileListWidget->item(indCurrentImg)->data(Qt::UserRole);
-                  fileListWidget->item(indCurrentImg)->setBackgroundColor(QColor(255,0,0));
+                  fileListWidget->item(indCurrentImg)->setBackgroundColor(badColor);
                   fileListWidget->item(indCurrentImg)->setData(Qt::UserRole,ImgStatus::BAD);
                   m_nCountToBadImg++;
              }
@@ -707,16 +749,21 @@ void MainWindow::createToolBarAction()
     this->selectAction->setData(SceneItems::SelectObject);
     this->selectAction->setIcon(QIcon(":/icons/select.png"));
     this->selectAction->setCheckable(true);
-    this->selectAction->setShortcut(QKeySequence(Qt::Key_S));
 
-//    this->selectAction->setSho
+    QList<QKeySequence> selectActionKey;
+    selectActionKey << QKeySequence(Qt::Key_S);
+    this->selectAction->setShortcuts(selectActionKey);
+
+
+    QList<QKeySequence> drawActionKey;
+    drawActionKey << QKeySequence(Qt::Key_D);
 
 
     this->drawAction = new QAction("draw item(D)",this);
     this->drawAction->setData(SceneItems::DrawLine);
     this->drawAction->setIcon(QIcon(":/icons/drawbox.png"));
     this->drawAction->setCheckable(true);
-    this->drawAction->setShortcut(QKeySequence(Qt::Key_D));
+    this->drawAction->setShortcuts(drawActionKey);
 
     ActionPropagate =   new QAction("Propagate(P)",this);
     ActionPropagate->setIcon(QIcon(":/icons/propagate.png"));
@@ -738,13 +785,16 @@ void MainWindow::createToolBarAction()
     actionGroup = new QActionGroup(this);
     actionGroup->addAction(selectAction);
     actionGroup->addAction(drawAction);
+
 //    actionGroup->addAction(saveAction);
 //    actionGroup->
 //    qDebug()<<"====================";
 }
 void MainWindow::actioniGroupClick(QAction *action)
 {
+    fileListWidget->setFocus(Qt::NoFocusReason);
     scene->setMode(SceneItems::Mode(action->data().toInt()));
+
 }
 
 void MainWindow::createConnection()
@@ -924,18 +974,6 @@ void MainWindow::actionBoxSave()
         JsonBoxSaver::saveJsons(savebox, save_dir);
 
     }
-
-
-
-
-
-
-//    QMessageBox msgBox;
-
-//    msgBox.setText("The box has been saved");
-//    msgBox.setStandardButtons(QMessageBox::Ok);
-//    msgBox.exec();
-//    msgBox.setDefaultButton(QMessageBox::Save);
 }
 
 void MainWindow::creatToolBar()
@@ -1150,11 +1188,18 @@ void MainWindow::closeEvent(QCloseEvent *event)
                                                                 tr("Box Save and exit?\n"),
                                                                 QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
                                                                 QMessageBox::Yes);
-    if (resBtn != QMessageBox::Yes) {
-        event->ignore();
-    } else {
+    if (resBtn == QMessageBox::Yes)
+    {
         actionBoxSave();
         event->accept();
 
+    }
+    else if( resBtn == QMessageBox::No)
+    {
+        event->accept();
+    }
+    else
+    {
+        event->ignore();
     }
 }

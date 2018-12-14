@@ -23,6 +23,7 @@ void ClassToolBarButton::setNextAction()
 
 void ClassToolBarButton::setNextAction(QAction *action)
 {
+    Q_UNUSED(action);
     qDebug()<<__FUNCTION__;
 }
 

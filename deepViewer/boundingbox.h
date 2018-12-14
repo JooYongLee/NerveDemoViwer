@@ -43,6 +43,9 @@ public:
     void setClass(BoxClass id)      { id_class = id;}
     int  getClass()                 { return id_class ;}
 
+    double getAerea();
+    bool isValidArea();
+
     // boxes info
     qreal left ;
     qreal right;
@@ -92,6 +95,7 @@ public:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
     void wheelEvent(QWheelEvent *event)
     {
+        Q_UNUSED(event);
         qDebug()<<__FUNCTION__;
     }
 
