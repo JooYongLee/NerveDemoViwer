@@ -98,6 +98,8 @@ public slots:
     void triggeredLoadBoxes();
     void triggerChangeActionClass();
 
+    void triggerSaveImg();
+
 
     void showPosCursor(QPointF *);
 
@@ -111,6 +113,7 @@ public slots:
     void triggerdCoronalView();
 
     void triggerPropagate();
+    void triggerSwitchBoxDrawing();
 
     void closeEvent(QCloseEvent *event);
 
@@ -118,6 +121,9 @@ public slots:
 
 private:
     bool m_bPropgateEn;
+    bool m_VisibilityOfBox;
+
+    void _PropagateBoxesFromBoxID(int beforebox_idx, int nextbox_idx, int extract_box_id);
 
     void _PropagateBoxes(int beforebox_idx, int nextbox_idx);
 
@@ -126,9 +132,16 @@ private:
     // the number of image which not need to be fixed
     int         m_nCountToGoodImg;
 
+    int         m_nCountBothNerve;
+    int         m_nCountSingleNerve;
+
     int         _GetCountOfBadImg() const       {   return m_nCountToBadImg;    }
     int         _GetCountOfGoodImg() const       {   return m_nCountToGoodImg;    }
-    void      _ResetCountOfStatusImg()       { m_nCountToBadImg = 0; m_nCountToGoodImg = 0;  }
+    void      _ResetCountOfStatusImg()
+    {
+        m_nCountToBadImg = 0; m_nCountToGoodImg = 0;
+        m_nCountBothNerve = 0; m_nCountSingleNerve = 0;
+    }
 
     ImgType m_imgtype;
     VIEW_FLAG m_viewDcmCamera;
@@ -165,6 +178,11 @@ private:
     QAction *ActionSagittal;
 
     QAction *ActionPropagate;
+
+    QAction *ActionSaveImg;
+
+
+
 
 
 
@@ -210,7 +228,7 @@ private:
     void wheelEvent(QWheelEvent *event);
 
 
-
+    QAction *visibleBoxAction;
     QAction *selectAction;
     QAction *drawAction;
     QAction *saveAction;

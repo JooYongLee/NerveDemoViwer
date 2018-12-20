@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     qjsonbox.cpp \
     rectdragitem.cpp \
     scenebox.cpp \
-    dcmreader.cpp
+    dcmreader.cpp \
+    filelistwidget.cpp
 
 HEADERS  += mainwindow.h \
     boundingbox.h \
@@ -37,7 +38,8 @@ HEADERS  += mainwindow.h \
     qjsonbox.h \
     rectdragitem.h \
     scenebox.h \
-    dcmreader.h
+    dcmreader.h \
+    filelistwidget.h
 
 CONFIG(release ,debug|release)
 {

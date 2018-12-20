@@ -148,11 +148,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_NumImgInViwer(0),
     m_nClassId(QBoxitem::NERVE),
     m_isFileListDeleting(false),
-    m_viewDcmCamera(VIEW_FLAG::CORONAL),
-    m_nCountToBadImg(0),
-    m_nCountToGoodImg(0),
-    m_bPropgateEn(false)
+    m_viewDcmCamera(VIEW_FLAG::CORONAL),    
+    m_bPropgateEn(false),
+    m_VisibilityOfBox(true)
 {    
+
+    _ResetCountOfStatusImg();
     QBoxitem::init_map_box();
     ui->setupUi(this);
     this->setAcceptDrops(true);
@@ -258,6 +259,10 @@ void MainWindow::showPosCursor(QPointF *curpnt)
         int counterTotal = fileListWidget->count();
 
         m_CursorTracker->setText(\
+                    QString("single nerve: %1 , double nerve : %2  ")
+                    .arg(m_nCountSingleNerve,3,10,QChar('0'))
+                    .arg(m_nCountBothNerve,3,10,QChar('0'))
+                    +
                     QString("bad/good : %1/%2 , gt/total : %3/%4  ")
                     .arg(counterBadImg,3,10,QChar('0'))
                     .arg(counterGoodImg,3,10,QChar('0'))
@@ -274,6 +279,48 @@ void MainWindow::showPosCursor(QPointF *curpnt)
 
 
 }
+
+void MainWindow::_PropagateBoxesFromBoxID(int beforebox_idx, int nextbox_idx, int extract_box_id)
+{
+    QList<QBoxitem::PointRegion> AddBoxitems = {
+        QBoxitem::PointRegion::LEFT,
+        QBoxitem::PointRegion::RIGHT
+    };
+    qDebug()<<__FUNCTION__<<"next Box#"<<BoxesList.at(nextbox_idx).boxmap.count();
+//    int extract_box_id = QBoxitem::BoxClass::NERVE;
+    foreach (QBoxitem nextBox, BoxesList.at(nextbox_idx).boxmap)
+    {
+        if( nextBox.getClass() == extract_box_id )
+        {
+            QBoxitem::PointRegion regions =     nextBox.WhereRegion(scene->GetCurrrentOriginImgsize());
+            qDebug()<<__FUNCTION__<<scene->GetCurrrentOriginImgsize();
+            qDebug()<<scene->GetCurrrentOriginImgsize();
+            qDebug()<<__FUNCTION__<<nextBox.left<<nextBox.top<<nextBox.right<<nextBox.bottom;
+
+            int ind = AddBoxitems.indexOf(regions);
+            if(  ind != -1)
+            {
+                AddBoxitems.removeAt(ind);
+            }
+        }
+
+    }
+    foreach (QBoxitem::PointRegion extract_region, AddBoxitems)
+    {
+
+        QBoxitem extract_box = BoxesList[beforebox_idx].GetBox( QBoxitem::PointRegion(extract_region),
+                                                                QBoxitem::BoxClass(extract_box_id),
+                                                                scene->GetCurrrentOriginImgsize());
+
+        if( extract_box.isValidBox())
+        {
+            QBoxitem copybox = extract_box.copy();
+            BoxesList[nextbox_idx].boxmap.append(copybox);
+        }
+    }
+
+}
+
 void MainWindow::_PropagateBoxes(int beforebox_idx, int nextbox_idx)
 {
     if( qAbs(beforebox_idx - nextbox_idx) == 1 &&
@@ -314,6 +361,25 @@ void MainWindow::_PropagateBoxes(int beforebox_idx, int nextbox_idx)
 
             UpdateWorkStateOfCurrentFileList(nextbox_idx);
         }
+        else if( BoxesList.at(beforebox_idx).boxmap.count() > 0 &&
+                 BoxesList.at(nextbox_idx).boxmap.count() < 4)
+        {
+
+            int extract_box_id = QBoxitem::BoxClass::LOWERCASE;
+            _PropagateBoxesFromBoxID(beforebox_idx, nextbox_idx, extract_box_id );
+            extract_box_id = QBoxitem::BoxClass::NERVE;
+            _PropagateBoxesFromBoxID(beforebox_idx, nextbox_idx, extract_box_id );
+
+            // for sorting nerve(tiny boxes) back of order, in th scene
+//            QList<QBoxitem> nerve_boxes = BoxesList[nextbox_idx].pop(QBoxitem::NERVE);
+            BoxesList[nextbox_idx].sort();
+
+
+//            BoxesList[nerve_boxes].push(nerve_boxes);
+
+            UpdateWorkStateOfCurrentFileList(nextbox_idx);
+
+        }
     }
 }
 
@@ -338,9 +404,10 @@ void MainWindow::fileListClicked(QListWidgetItem *items)
                     fileManager.GetBasePath() + '/' +   items->text();
 
 
-        scene->Redraw(full_abs_path,
+        scene->RedrawBox(full_abs_path,
                       BoxesList.at(item_ind).boxmap,
-                      ViewConfig(m_imgtype,m_viewDcmCamera));
+                      ViewConfig(m_imgtype,m_viewDcmCamera),
+                      m_VisibilityOfBox);
 
 
         _SetStatusImg(item_ind);
@@ -371,9 +438,10 @@ void MainWindow::fileListChanged(int file_num)
 
 //        qDebug()<<__FUNCTION__<<full_abs_path;
 
-        scene->Redraw(full_abs_path,
+        scene->RedrawBox(full_abs_path,
                       BoxesList.at(file_num).boxmap,
-                      ViewConfig(m_imgtype,m_viewDcmCamera));
+                      ViewConfig(m_imgtype,m_viewDcmCamera),
+                      m_VisibilityOfBox);
         _SetStatusImg(file_num);
         RedrawViwer(file_num);
     }
@@ -428,9 +496,13 @@ void MainWindow::dropEvent(QDropEvent *event)
 
     QFileInfo fileinfo(filelist.first());
 
+    m_bPropgateEn = false;
+    ActionPropagate->setChecked(false);
+
 
     if(LoadMultipleJsonFiles(fileinfo.path()))
     {
+
 
     }
     else
@@ -637,8 +709,11 @@ void MainWindow::UpdateWorkStateOfAllFileList()
 //            BoxesList.at(imgCnt).boxmap
             if( fileListWidget->count() > imgCnt )
             {
+                ImgStatus imgstatus;
+                int nerveCounter = 0;
+                int lowecaseCounter = 0;
 
-                if( QBoxitem::CheckBalanceBox(BoxesList.at(imgCnt).boxmap))
+                if( QBoxitem::CheckBalanceBox(BoxesList.at(imgCnt).boxmap, imgstatus, nerveCounter, lowecaseCounter))
                 {
                     fileListWidget->item(imgCnt)->setBackgroundColor(goodColor);
                     fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::GOOD);
@@ -649,6 +724,14 @@ void MainWindow::UpdateWorkStateOfAllFileList()
                     fileListWidget->item(imgCnt)->setBackgroundColor(badColor);
                     fileListWidget->item(imgCnt)->setData(Qt::UserRole,ImgStatus::BAD);
                     m_nCountToBadImg++;
+                }
+                if( nerveCounter == 2)
+                {
+                    m_nCountBothNerve++;
+                }
+                else
+                {
+                    m_nCountSingleNerve++;
                 }
 
             }
@@ -669,11 +752,19 @@ void MainWindow::UpdateWorkStateOfCurrentFileList(int indCurrentImg )
         if(imgstatus==ImgStatus::GOOD)     m_nCountToGoodImg--;
         else if(imgstatus==ImgStatus::BAD)     m_nCountToBadImg--;
 
+        int nerve_count = BoxesList[indCurrentImg].count(QBoxitem::BoxClass::NERVE);
+
+//        if( nerve_count == 2 )  m_nCountBothNerve++;
+//        else if( nerve_count == 1) m_nCountSingleNerve++;
+
+        qDebug()<<__FUNCTION__<<m_nCountBothNerve<<m_nCountSingleNerve;
         if( BoxesList[indCurrentImg].boxmap.count() > 0 )
         {
+//            ImgStatus status;
+//            int nerveCounter = 0;
+//            int lowecaseCounter = 0;
 
-
-             if( QBoxitem::CheckBalanceBox(BoxesList.at(indCurrentImg).boxmap))
+             if( QBoxitem::CheckBalanceBox(BoxesList.at(indCurrentImg).boxmap ))
              {
                  fileListWidget->item(indCurrentImg)->setBackgroundColor(goodColor);
                  fileListWidget->item(indCurrentImg)->setData(Qt::UserRole,ImgStatus::GOOD);
@@ -714,7 +805,26 @@ void MainWindow::addBoxListToViwer(QBoxitem* box)
     if( _GetStatusImg() < BoxesList.size())
     {
 //        qDebug()<<__FUNCTION__<<"add box to viewer"<<box->getID();
-        BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);        
+
+        if( box->getClass() == QBoxitem::BoxClass::NERVE )
+        {
+//            int nerve_counter = BoxesList[_GetStatusImg()].count(QBoxitem::BoxClass::NERVE);
+//            if( nerve_counter == 2)
+//            {
+
+//            }
+//            else if( nerve_counter == 1 )
+//            {
+
+//            }
+//            else
+//            {
+
+//            }
+        }
+        BoxesList[_GetStatusImg()].boxmap.insert(row_id, *box);
+
+
     }
 
     UpdateWorkStateOfCurrentFileList();
@@ -734,6 +844,12 @@ MainWindow::~MainWindow()
 }
 void MainWindow::createToolBarAction()
 {
+
+    this->visibleBoxAction = new QAction("Draw Boxes on Image(O)",this);
+    this->visibleBoxAction->setIcon(QIcon(":/icons/visibility.png"));
+    this->visibleBoxAction->setShortcut(QKeySequence(Qt::Key_O));
+    this->visibleBoxAction->setCheckable(true);
+    this->visibleBoxAction->setChecked(m_VisibilityOfBox);
 
     this->dnnAction = new QAction("Save Boxes",this);
     this->dnnAction->setIcon(QIcon(":/icons/dnnicon.png"));
@@ -807,6 +923,8 @@ void MainWindow::createConnection()
     connect(loadBoxAction, SIGNAL(triggered(bool)), this, SLOT(actionloadBox()));
 
     connect(ActionPropagate   , SIGNAL(triggered()), this, SLOT(triggerPropagate()));
+
+    connect(visibleBoxAction   , SIGNAL(triggered()), this, SLOT(triggerSwitchBoxDrawing()));
 }
 
 void MainWindow::loadMultipleFileBoxToViwer(QStringList filepath, QString basepath)
@@ -991,6 +1109,9 @@ void MainWindow::creatToolBar()
     drawingToolBar->addAction(dnnAction);
     drawingToolBar->addAction(loadBoxAction);
     drawingToolBar->addAction(ActionPropagate);
+    drawingToolBar->addAction(visibleBoxAction);
+
+
 }
 
 
@@ -1008,6 +1129,10 @@ void MainWindow::triggerChangeActionClass()
         m_classBarButton->setDefaultAction(ActionNerve);
         triggeredNerve();
     }
+}
+void MainWindow::triggerSaveImg()
+{
+    qDebug()<<__FUNCTION__;
 }
 
 void MainWindow::triggeredNerve()
@@ -1039,6 +1164,23 @@ void MainWindow::triggerPropagate()
         m_bPropgateEn = true;
         ActionPropagate->setChecked(true);
     }
+}
+
+void MainWindow::triggerSwitchBoxDrawing()
+{
+    if( m_VisibilityOfBox )
+    {
+        m_VisibilityOfBox = false;
+        visibleBoxAction->setChecked(false);
+
+    }
+    else
+    {
+        m_VisibilityOfBox = true;
+        visibleBoxAction->setChecked(true);
+    }
+    scene->RedrawBox(BoxesList.at(_GetStatusImg()).boxmap, m_VisibilityOfBox);
+
 }
 
 void MainWindow::createToolBarActions()
@@ -1181,6 +1323,15 @@ void MainWindow::createClassToolBars()
 {
     drawingToolBar->addWidget(m_classBarButton);
     drawingToolBar->addWidget(CameraViewButton);
+
+
+    ActionSaveImg = new QAction("Save Image",this);
+    ActionSaveImg->setIcon(QIcon(":/icons/camera.png"));
+//    ActionSaveImg->setShortcut(QKeySequence(Qt::Key_O));
+
+    connect(ActionSaveImg,SIGNAL(triggered(bool)),this,SLOT(triggerSaveImg()));
+    drawingToolBar->addAction(ActionSaveImg);
+
 }
 void MainWindow::closeEvent(QCloseEvent *event)
 {

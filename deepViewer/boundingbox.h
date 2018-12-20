@@ -16,10 +16,13 @@ class QBoxitem
 public:
     // box class
     enum BoxClass { BACKGROUND, NERVE, LOWERCASE };
+    enum PointRegion { LEFTTOP, RIGHTTOP, LEFTBOTTOM, RIGHTBOTTOM, LEFT, RIGHT};
+
 
     static void init_map_box();
     static bool CheckBalanceBox(QList<QBoxitem> boxes);
     static bool CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus);
+    static bool CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus, int &nerveCounter, int &lowercaseCounter);
 
     QBoxitem(qreal x_min = 0, qreal y_min = 0, qreal width = 0, qreal height= 0)
         : left(x_min),
@@ -33,7 +36,24 @@ public:
 //        uid_box = QUuid::createUuid();
 //        qDebug()<<uid_box;
     }
+    bool isValidBox()
+    {
+        if( right > left && bottom > top )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+
+    }
+
     ~QBoxitem(){}
+
+
+//    QDebug operator <<(QDebug dbg, const QBoxitem &box);
 
     // unique id of the box, to used to check between drawing item and item of list
     void setID(QUuid id)            { uid_box = id;}
@@ -45,6 +65,11 @@ public:
 
     double getAerea();
     bool isValidArea();
+
+    QBoxitem copy();
+
+    PointRegion WhereRegion(QSize imgsize);
+    PointRegion WhereRegion(qreal img_width, qreal img_height);
 
     // boxes info
     qreal left ;
@@ -66,10 +91,15 @@ public:
     BoxManager(){}
     virtual ~BoxManager(){}
     // interface with unique number and the number of qlistwidget
+    QBoxitem GetBox(QBoxitem::PointRegion checkRegion, QBoxitem::BoxClass boxid, QSize imgSize);
     QList<QBoxitem> boxmap;
+    QSize   imgSize;
     // image file name
     QString filename;
     int     id_filename;
+    void sort();
+    QList<QBoxitem> pop(QBoxitem::BoxClass boxid);
+    int count(QBoxitem::BoxClass boxid);
 };
 
 class BoundingBox : public QGraphicsRectItem

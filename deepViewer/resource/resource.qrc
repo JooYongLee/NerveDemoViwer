@@ -12,5 +12,7 @@
         <file>coronal.png</file>
         <file>sagittal.png</file>
         <file>propagate.png</file>
+        <file>visibility.png</file>
+        <file>camera.png</file>
     </qresource>
 </RCC>

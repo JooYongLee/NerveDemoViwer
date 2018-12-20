@@ -16,11 +16,72 @@ bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes)
     bool status = CheckBalanceBox(boxes, _);
     return status;
 }
+QBoxitem::PointRegion QBoxitem::WhereRegion(QSize imgsize)
+{
+    return this->WhereRegion((qreal)imgsize.width(), (qreal)imgsize.height());
+}
+//QDebug QBoxitem::operator <<(QDebug dbg, const QBoxitem &box)
+//{
+////        dbg.nospace()<<QString("left,top,right,bottom:%1,%2,%3,%4")
+////             .arg(box.left)
+////             .arg(box.top)
+////             .arg(box.right)
+////             .arg(box.bottom);
+//    return dbg.maybeSpace();
+//}
+QBoxitem QBoxitem::copy()
+{
+    QBoxitem newbox(this->left,
+                    this->top,
+                    this->right - this->left + 1,
+                    this->bottom - this->top + 1
+                );
+    newbox.setClass(QBoxitem::BoxClass(this->getClass()));
+    return newbox;
+}
 
+QBoxitem::PointRegion QBoxitem::WhereRegion(qreal img_width, qreal img_height)
+{
+    qreal box_center_x = (left + right)/2.0;
+    qreal box_center_y = (top + bottom)/2.0;
+    qreal img_center_x = (img_width)/2.0;
+    qreal img_center_y = (img_height)/2.0;
+    if( box_center_x < img_center_x )
+    {
+        return QBoxitem::PointRegion::LEFT;
+//        if( box_center_y < img_center_y)
+//        {
+//            return QBoxitem::PointRegion::LEFTTOP;
+//        }
+//        else
+//        {
+//            return QBoxitem::PointRegion::LEFTBOTTOM;
+//        }
+    }
+    else
+    {
+        return QBoxitem::PointRegion::RIGHT;
+//        if( box_center_y < img_center_y )
+//        {
+//            return QBoxitem::PointRegion::RIGHTTOP;
+//        }
+//        else
+//        {
+//            return QBoxitem::PointRegion::RIGHTBOTTOM;
+//        }
+    }
+}
 bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus)
 {
     int nerveCounter = 0;
     int lowercaseCounter = 0;
+    return CheckBalanceBox(boxes, imgstatus, nerveCounter, lowercaseCounter);
+}
+
+bool QBoxitem::CheckBalanceBox(QList<QBoxitem> boxes, ImgStatus &imgstatus, int &nerveCounter, int &lowercaseCounter)
+{
+    nerveCounter = 0;
+    lowercaseCounter = 0;
     int invalidAreaCounter = 0;
     double AverageNerveArea = 0.;
     double AverageLowercaseArea = 0.;
@@ -169,3 +230,62 @@ QVariant BoundingBox::itemChange(GraphicsItemChange change, const QVariant &valu
 
 //    return box;
 //}
+QBoxitem BoxManager::GetBox(QBoxitem::PointRegion checkRegion, QBoxitem::BoxClass boxid, QSize imgSize)
+{
+    QBoxitem box;
+    foreach (QBoxitem iBox, boxmap) {
+        if( iBox.getClass()==boxid)
+        {
+            if( iBox.WhereRegion(imgSize) == checkRegion )
+            {
+                return iBox;
+            }
+        }
+    }
+    return box;
+}
+void BoxManager::sort()
+{
+    int low,high;
+//    QList<QBoxitem> copybox(boxmap);
+    for( low = 0; low < boxmap.count()-1; low++)
+    {
+        for(high = low+1; high < boxmap.count();high++)
+        {
+            if(     boxmap[low].getClass() == QBoxitem::BoxClass::NERVE &&
+                    boxmap[high].getClass() == QBoxitem::BoxClass::LOWERCASE )
+            {
+                boxmap.swap(low,high);
+            }
+        }
+    }
+}
+ QList<QBoxitem> BoxManager::pop(QBoxitem::BoxClass boxid)
+ {
+     QList<QBoxitem> ext_box;
+     QList<QBoxitem>::iterator it = boxmap.begin();
+     while( it != boxmap.end())
+     {
+         if((*it).getClass() == boxid)
+         {
+             ext_box.append(*it);
+             it = boxmap.erase(it);
+         }
+         else
+         {
+             ++it;
+         }
+     }
+     return ext_box;
+ }
+int BoxManager::count(QBoxitem::BoxClass boxid)
+{
+    int counter = 0;
+    foreach (QBoxitem box, boxmap) {
+        if( box.getClass()==boxid)
+        {
+            counter++;
+        }
+    }
+    return counter;
+}

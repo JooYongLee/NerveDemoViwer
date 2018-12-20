@@ -25,7 +25,7 @@ inline QRectF ConstrainedRect(QRectF rect1, QRectF rect2)
     qreal bottom  = qMin(rect1.bottom()   ,rect2.bottom());
     return QRectF(QPointF(left,top), QPointF(right,bottom));
 }
-void SceneItems::Redraw(QString path,ViewConfig viewConfig)
+void SceneItems::RedrawBox(QString path,ViewConfig viewConfig)
 {
     QPixmap img;
     QSize imgSize;
@@ -49,7 +49,7 @@ void SceneItems::Redraw(QString path,ViewConfig viewConfig)
 void SceneItems::_DeleteAllBoxItems()
 {
     foreach(QGraphicsItem* item, this->items()){
-        BoundingBox *rect = qgraphicsitem_cast<BoundingBox*>(item);
+        BoundingBox *rect = qgraphicsitem_cast<BoundingBox*>(item);        
         if( rect != nullptr )
         {
             removeItem(item);
@@ -57,10 +57,34 @@ void SceneItems::_DeleteAllBoxItems()
         }
     }
 }
-
-void SceneItems::Redraw(QString path, QList<QBoxitem> boxitems, ViewConfig viewConfig)
+void SceneItems::RedrawBox(QList<QBoxitem> boxitems, bool boxVisible )
 {
-    Redraw(path, viewConfig);
+    _DeleteAllBoxItems();
+
+    for( int ind = 0; ind < boxitems.count(); ind++)
+    {
+        QBoxitem box = boxitems.at(ind);
+        QBoxitem::BoxClass box_class_id = QBoxitem::BoxClass(box.getClass());
+        BoundingBox *newbox = new BoundingBox(nullptr, box_class_id);
+        QUuid box_uid = box.getID();
+        int     box_list_id = ind;
+
+        QRectF sceneRect = _ConvertInverseBoundingBox(&box);
+
+        QRectF bounding_rect = _GetBoundingRectOnImg(sceneRect, sceneRect.topLeft());
+//        qDebug()<<__FUNCTION__<<box.getClass();
+
+        newbox->setVisible(boxVisible);
+//        newbox->setVisible(false);
+        newbox->SetProperty(sceneRect, bounding_rect, box_uid, box_list_id, box_class_id );
+
+        this->addItem(newbox);
+    }
+}
+
+void SceneItems::RedrawBox(QString path, QList<QBoxitem> boxitems, ViewConfig viewConfig, bool boxVisible )
+{
+    RedrawBox(path, viewConfig);
 
     _DeleteAllBoxItems();    
 
@@ -78,6 +102,8 @@ void SceneItems::Redraw(QString path, QList<QBoxitem> boxitems, ViewConfig viewC
         QRectF bounding_rect = _GetBoundingRectOnImg(sceneRect, sceneRect.topLeft());
 //        qDebug()<<__FUNCTION__<<box.getClass();
 
+        newbox->setVisible(boxVisible);
+//        newbox->setVisible(false);
         newbox->SetProperty(sceneRect, bounding_rect, box_uid, box_list_id, box_class_id );
 
         this->addItem(newbox);
@@ -522,7 +548,6 @@ void SceneItems::UpdateBoxItems()
             emit updateItems(&boxitems);
         }
     }
-
 }
 
 void SceneItems::wheelEvent(QWheelEvent* event)
@@ -566,6 +591,10 @@ void SceneItems::wheelEvent(QWheelEvent* event)
         }
     }
 
+}
+QSize SceneItems::GetCurrrentOriginImgsize()
+{
+    return pixmapitem->m_imgSize;
 }
 
 QRectF SceneItems::_ConvertInverseBoundingBox(QBoxitem *box)

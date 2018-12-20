@@ -24,8 +24,9 @@ public :
     void setMode(Mode mode);
 
     ImgItem *pixmapitem;
-    void Redraw(QString path,ViewConfig viewConfig);
-    void Redraw(QString path,  QList<QBoxitem> boxitems, ViewConfig viewConfig );
+    void RedrawBox(QString path,ViewConfig viewConfig);
+    void RedrawBox(QString path,  QList<QBoxitem> boxitems, ViewConfig viewConfig , bool boxVisible = true);
+    void RedrawBox(QList<QBoxitem> boxitems, bool boxVisible = true);
     void ComputeBoxInImg();
     void wheelEvent(QWheelEvent* event);
     void createGuideLine();
@@ -36,6 +37,7 @@ public :
     bool LoadDcmVolume(QStringList imglist, QString basepath);
     dcmFileReader dcmReader;
     int GetSliceSize(VIEW_FLAG typeflag);
+    QSize GetCurrrentOriginImgsize();
 signals:
     void valuechanged(QBoxitem*);
     void deletedItems(QUuid*);
