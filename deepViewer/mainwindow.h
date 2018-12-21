@@ -119,6 +119,8 @@ public slots:
 
     void setFocusFileList();
 
+    void keyPressEvent(QKeyEvent*);
+
 private:
     bool m_bPropgateEn;
     bool m_VisibilityOfBox;

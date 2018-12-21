@@ -650,7 +650,7 @@ void MainWindow::updateSelectBox(QBoxitem *selectBox)
         }
 
     }
-//    fileListWidget->setFocus(Qt::NoFocusReason);
+    fileListWidget->setFocus(Qt::NoFocusReason);
 }
 
 void MainWindow::DeleteBoxList(QUuid *tobeDeletedItem)
@@ -1353,4 +1353,34 @@ void MainWindow::closeEvent(QCloseEvent *event)
     {
         event->ignore();
     }
+}
+void MainWindow::keyPressEvent(QKeyEvent* ke)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    if( ke->key() == Qt::Key_Up)
+    {
+        if( fileListWidget->count() > 0 )
+        {
+            int num = qMin(this->_GetStatusImg() + 1, fileListWidget->count()-1);
+            fileListChanged(num);
+        }
+        qDebug() <<"up";
+    }
+    else if( ke->key() == Qt::Key_Down)
+    {
+        if( fileListWidget->count() > 0 )
+        {
+            int num = qMax(this->_GetStatusImg() -1, 0);
+            fileListChanged(this->_GetStatusImg()-1);
+        }
+        qDebug() <<"down";
+    }
+    else if( ke->key() == Qt::Key_Delete)
+    {
+        scene->keyPressEvent(ke);
+        qDebug() <<"delete";
+    }
+
+
 }

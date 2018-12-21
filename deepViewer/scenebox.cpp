@@ -13,7 +13,7 @@
 #include <QPushButton>
 #include "defineconfigure.h"
 
-const double gloabl_rect_eidt_dist_thresh = 15.;
+const double gloabl_rect_eidt_dist_thresh = 25.;
 
 
 
@@ -713,6 +713,7 @@ void SceneItems::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
 }
 
 void SceneItems::keyPressEvent(QKeyEvent *event){
+    qDebug()<<__FUNCTION__;
     if(event->key() == Qt::Key_Delete)
         foreach(QGraphicsItem* item, selectedItems()){
             BoundingBox *rect = qgraphicsitem_cast<BoundingBox*>(item);
