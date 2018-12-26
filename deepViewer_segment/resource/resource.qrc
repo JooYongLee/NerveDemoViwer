@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>dnnicon.png</file>
+        <file>drawbox.png</file>
+        <file>line.png</file>
+        <file>loadBox.png</file>
+        <file>nerve.png</file>
+        <file>saveicon.png</file>
+        <file>select.png</file>
+        <file>toothbone.png</file>
+        <file>axial.png</file>
+        <file>coronal.png</file>
+        <file>sagittal.png</file>
+        <file>propagate.png</file>
+        <file>visibility.png</file>
+        <file>camera.png</file>
+    </qresource>
+</RCC>
